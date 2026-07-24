@@ -1,0 +1,26 @@
+{
+  "experiment_date": "2026-07-23",
+  "host_architecture": "aarch64",
+  "operating_system": "Ubuntu Linux, kernel 6.17.0-1014-nvidia",
+  "accelerator": "NVIDIA GB10",
+  "driver_version": "580.142",
+  "container": "nvcr.io/nvidia/pytorch:26.01-py3",
+  "container_digest": "sha256:38ed2ecb2c16d10677006d73fb0a150855d6ec81db8fc66e800b5ae92741007e",
+  "container_image_id": "sha256:5072d2d33da67f3099d83e89718cec113c89ff3c7b67851a5d435ff585b447ba",
+  "python": "3.12.3",
+  "pytorch": "2.10.0a0+a36e1d39eb.nv26.01.42222806",
+  "torchvision": "0.25.0a0+6b56de1c.nv26.01.42222806",
+  "numpy": "2.1.0",
+  "pandas": "2.3.3",
+  "cuda": "13.1",
+  "cudnn": 91701,
+  "execution_sources": {
+    "executed_run_script_sha256": "79b58c22ae516b0dd03c510fe7a6e3ffb81ff4982037cd0164c20c3eb2a7afd3",
+    "executed_helper_script_sha256": "7f5080fbd9dc0542080d35001e3eebdc40994f2821287dcc0914bf682cbfcc0e",
+    "published_self_contained_script_sha256": "8d9a365ffffcdae626c0393b96e552153ba7bcbb25adad510fdcd8309ae0b282"
+  },
+  "determinism": {
+    "torch_backends_cudnn_benchmark": false,
+    "torch_backends_cudnn_deterministic": true
+  }
+}

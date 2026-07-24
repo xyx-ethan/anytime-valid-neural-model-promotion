@@ -1,16 +1,16 @@
 panel,scenario,method,x,y,lower,upper,n
-false_promotion,equal error 0.10,e-process,0.1,0.005875,0.004421181780025844,0.007803130673448256,8000
-false_promotion,equal error 0.10,unadjusted 20-look test,0.1,0.170875,0.16278536034049673,0.17928056798988456,8000
-false_promotion,equal error 0.10,Bonferroni 20-look test,0.1,0.0115,0.009386916737151677,0.014081996257580621,8000
-false_promotion,equal error 0.20,e-process,0.2,0.0095,0.007597275114524522,0.011873557687760414,8000
-false_promotion,equal error 0.20,unadjusted 20-look test,0.2,0.180875,0.17259414047658453,0.18946218881603358,8000
-false_promotion,equal error 0.20,Bonferroni 20-look test,0.2,0.0125,0.01028874626116762,0.01517920682978836,8000
-false_promotion,equal error 0.30,e-process,0.3,0.009625,0.0077085045258597044,0.012012208288453192,8000
-false_promotion,equal error 0.30,unadjusted 20-look test,0.3,0.182375,0.1740663007221848,0.19098858871476884,8000
-false_promotion,equal error 0.30,Bonferroni 20-look test,0.3,0.013625,0.01130799770527084,0.016408875493936777,8000
-dependent_false_promotion,persistent shared difficulty,e-process,,0.002,0.0012314880574219205,0.0032465440231854194,8000
-dependent_false_promotion,persistent shared difficulty,unadjusted 20-look test,,0.14325,0.13574440432056092,0.1510980413516412,8000
-dependent_false_promotion,persistent shared difficulty,Bonferroni 20-look test,,0.0065,0.004960480679358951,0.00851323183425495,8000
+false_component_crossing,equal error 0.10,e-process,0.1,0.005875,0.004421181780025844,0.007803130673448256,8000
+false_component_crossing,equal error 0.10,unadjusted 20-look test,0.1,0.170875,0.16278536034049673,0.17928056798988456,8000
+false_component_crossing,equal error 0.10,Bonferroni 20-look test,0.1,0.0115,0.009386916737151677,0.014081996257580621,8000
+false_component_crossing,equal error 0.20,e-process,0.2,0.0095,0.007597275114524522,0.011873557687760414,8000
+false_component_crossing,equal error 0.20,unadjusted 20-look test,0.2,0.180875,0.17259414047658453,0.18946218881603358,8000
+false_component_crossing,equal error 0.20,Bonferroni 20-look test,0.2,0.0125,0.01028874626116762,0.01517920682978836,8000
+false_component_crossing,equal error 0.30,e-process,0.3,0.009625,0.0077085045258597044,0.012012208288453192,8000
+false_component_crossing,equal error 0.30,unadjusted 20-look test,0.3,0.182375,0.1740663007221848,0.19098858871476884,8000
+false_component_crossing,equal error 0.30,Bonferroni 20-look test,0.3,0.013625,0.01130799770527084,0.016408875493936777,8000
+dependent_false_component_crossing,persistent shared difficulty,e-process,,0.002,0.0012314880574219205,0.0032465440231854194,8000
+dependent_false_component_crossing,persistent shared difficulty,unadjusted 20-look test,,0.14325,0.13574440432056092,0.1510980413516412,8000
+dependent_false_component_crossing,persistent shared difficulty,Bonferroni 20-look test,,0.0065,0.004960480679358951,0.00851323183425495,8000
 promotion_summary,loss gap 0.05,e-process,0.05,0.275625,0.26594306185479244,0.28552231655501925,8000
 promotion_summary,loss gap 0.05,unadjusted 20-look test,0.05,0.88175,0.874490290276357,0.8886432664570328,8000
 promotion_summary,loss gap 0.05,Bonferroni 20-look test,0.05,0.456625,0.445733190894751,0.4675584449315468,8000

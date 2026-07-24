@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reproduce the false-promotion and detection simulations."""
+"""Reproduce component-crossing control and detection simulations."""
 
 from __future__ import annotations
 
@@ -146,7 +146,7 @@ def wilson_interval(successes: int, total: int, z: float = 1.959963984540054) ->
 
 
 def evaluate_simulations() -> tuple[pd.DataFrame, dict[str, object]]:
-    """Evaluate false promotion, power, and a conjunctive promotion gate."""
+    """Evaluate component crossing, power, and a conjunctive promotion gate."""
     rng = np.random.default_rng(SEED)
     rows: list[dict[str, object]] = []
     summary: dict[str, object] = {
@@ -174,7 +174,7 @@ def evaluate_simulations() -> tuple[pd.DataFrame, dict[str, object]]:
             low, high = wilson_interval(successes, RUNS)
             rows.append(
                 {
-                    "panel": "false_promotion",
+                    "panel": "false_component_crossing",
                     "scenario": f"equal error {equal_error:.2f}",
                     "method": method,
                     "x": equal_error,
@@ -205,7 +205,7 @@ def evaluate_simulations() -> tuple[pd.DataFrame, dict[str, object]]:
         }
         rows.append(
             {
-                "panel": "dependent_false_promotion",
+                "panel": "dependent_false_component_crossing",
                 "scenario": "persistent shared difficulty",
                 "method": method,
                 "x": np.nan,

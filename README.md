@@ -27,10 +27,11 @@ seed recorded in `analysis/run_analysis.py`.
 ## Split CIFAR-10 experiment
 
 The neural experiment uses PyTorch and torchvision from the NVIDIA PyTorch
-26.01 container. The script downloads CIFAR-10, creates mutually exclusive
-model-fitting, development, and confirmation partitions, trains the initial
-ResNet-18, adapts three candidates, freezes them, and evaluates the four
-promotion requirements.
+26.01 container. Exact package versions, the container digest, and execution
+source hashes are recorded in `source_data/computational_environment.json`.
+The script downloads CIFAR-10, creates mutually exclusive model-fitting,
+development, and confirmation partitions, trains the initial ResNet-18, adapts
+three candidates, freezes them, and evaluates the four promotion requirements.
 
 The confirmation configuration can be reproduced with:
 
@@ -64,6 +65,10 @@ can be checked and combined with:
   --output-dir reproduced_confirmation
 ```
 
+Byte-for-byte copies of the source used for the confirmation runs are preserved
+in `provenance/`. The script under `analysis/` is a self-contained equivalent
+that inlines its helper functions and adds input validation.
+
 The development grid and its frozen selection rule are recorded in
 `source_data/plasticity_retention_development/`. Each row gives the replay
 ratio, learning rate, seed, evaluation partition, four crossing outcomes, and
@@ -88,3 +93,5 @@ The repository does not redistribute CIFAR-10 images. Those data retain their
 original terms. The generated paired-loss arrays and numerical summaries are
 included for independent verification. The analysis code is released under
 the MIT License.
+
+The manuscript cites the immutable `v1.0.0` repository release.

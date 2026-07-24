@@ -89,8 +89,8 @@ mpl.rcParams.update(
 
 def panel_label(axis: plt.Axes, label: str) -> None:
     axis.text(
-        -0.13,
-        1.04,
+        -0.10,
+        1.01,
         label,
         transform=axis.transAxes,
         fontsize=9.0,
@@ -125,10 +125,10 @@ def figure_one(simulation: pd.DataFrame) -> None:
     )
 
     independent = simulation.loc[
-        simulation["panel"] == "false_promotion"
+        simulation["panel"] == "false_component_crossing"
     ].copy()
     dependent = simulation.loc[
-        simulation["panel"] == "dependent_false_promotion"
+        simulation["panel"] == "dependent_false_component_crossing"
     ].copy()
     dependent["scenario"] = "serial dependence"
     null_data = pd.concat([independent, dependent], ignore_index=True)
@@ -181,7 +181,7 @@ def figure_one(simulation: pd.DataFrame) -> None:
     )
     axes[0].set_xticks(x_base, scenario_labels)
     axes[0].set_xlabel("Null setting")
-    axes[0].set_ylabel("False-promotion probability")
+    axes[0].set_ylabel("False component-crossing probability")
     axes[0].set_ylim(0.0, 0.215)
     axes[0].grid(axis="y", color=GRID, linewidth=0.5)
     panel_label(axes[0], "a")
@@ -405,7 +405,7 @@ def figure_three(results: pd.DataFrame) -> None:
         [MODE_LABELS[m] for m in MODE_ORDER],
     )
     axes[0].set_ylim(len(MODE_ORDER) - 0.5, -0.5)
-    axes[0].set_xlabel("Observations per stream at promotion")
+    axes[0].set_xlabel("Observations per stream at eligibility")
     axes[0].grid(axis="x", color=GRID, linewidth=0.5)
     panel_label(axes[0], "a")
 
