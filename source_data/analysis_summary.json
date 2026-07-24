@@ -29,10 +29,10 @@
     "null": {
       "0.10": {
         "e-process": {
-          "rate": 0.03725,
+          "rate": 0.005875,
           "ci95": [
-            0.033317392933664994,
-            0.04162680253882706
+            0.004421181780025844,
+            0.007803130673448256
           ]
         },
         "unadjusted 20-look test": {
@@ -52,10 +52,10 @@
       },
       "0.20": {
         "e-process": {
-          "rate": 0.04325,
+          "rate": 0.0095,
           "ci95": [
-            0.03900735790815282,
-            0.04793107814168131
+            0.007597275114524522,
+            0.011873557687760414
           ]
         },
         "unadjusted 20-look test": {
@@ -75,10 +75,10 @@
       },
       "0.30": {
         "e-process": {
-          "rate": 0.04075,
+          "rate": 0.009625,
           "ci95": [
-            0.03663341048154936,
-            0.04530742532772557
+            0.0077085045258597044,
+            0.012012208288453192
           ]
         },
         "unadjusted 20-look test": {
@@ -99,10 +99,10 @@
     },
     "dependent_null": {
       "e-process": {
-        "rate": 0.0335,
+        "rate": 0.002,
         "ci95": [
-          0.029775493781846955,
-          0.037672301329806306
+          0.0012314880574219205,
+          0.0032465440231854194
         ]
       },
       "unadjusted 20-look test": {
@@ -123,12 +123,12 @@
     "gain": {
       "0.05": {
         "e-process": {
-          "promotion_rate": 0.425375,
+          "promotion_rate": 0.275625,
           "ci95": [
-            0.4145795443105526,
-            0.4362420885087552
+            0.26594306185479244,
+            0.28552231655501925
           ],
-          "median_time_among_promoted": 406.0
+          "median_time_among_promoted": 562.0
         },
         "unadjusted 20-look test": {
           "promotion_rate": 0.88175,
@@ -149,12 +149,12 @@
       },
       "0.10": {
         "e-process": {
-          "promotion_rate": 0.989125,
+          "promotion_rate": 0.973625,
           "ci95": [
-            0.9866059875110078,
-            0.9911744995543996
+            0.9698796534900328,
+            0.9769157120839075
           ],
-          "median_time_among_promoted": 229.0
+          "median_time_among_promoted": 337.0
         },
         "unadjusted 20-look test": {
           "promotion_rate": 0.99975,
@@ -180,7 +180,7 @@
             0.99952004811184,
             1.0
           ],
-          "median_time_among_promoted": 45.0
+          "median_time_among_promoted": 75.0
         },
         "unadjusted 20-look test": {
           "promotion_rate": 1.0,
@@ -202,209 +202,12 @@
     },
     "conjunctive_null": {
       "description": "criterion 1 has a 0.10 loss advantage and criterion 2 has equal error probabilities of 0.20",
-      "criterion_1_promotion_rate": 0.989125,
-      "conjunctive_promotion_rate": 0.041875,
+      "criterion_1_promotion_rate": 0.9725,
+      "conjunctive_promotion_rate": 0.009375,
       "conjunctive_ci95": [
-        0.0377011633004915,
-        0.04648859261703507
+        0.0074861377185653066,
+        0.01173481507169167
       ]
-    }
-  },
-  "neural_streams": {
-    "configuration": {
-      "warmup": 600,
-      "update_batch_size": 32,
-      "seeds": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5,
-        6,
-        7,
-        8,
-        9,
-        10,
-        11,
-        12,
-        13,
-        14,
-        15,
-        16,
-        17,
-        18,
-        19
-      ],
-      "architectures": {
-        "8": [
-          8
-        ],
-        "16": [
-          16
-        ],
-        "16-8": [
-          16,
-          8
-        ]
-      },
-      "loss": "binary Brier loss",
-      "optimizer": "SGD",
-      "learning_rate": 0.01,
-      "momentum": 0.9,
-      "l2_penalty": 0.0001
-    },
-    "streams": {
-      "Elec2": {
-        "8": {
-          "runs": 20,
-          "promoted": 20,
-          "mean_brier_gap_median": 0.17768873099256954,
-          "mean_brier_gap_range": [
-            0.025387188602655028,
-            0.32904640800648455
-          ],
-          "promotion_time_median": 264.5,
-          "promotion_time_range": [
-            122,
-            427
-          ],
-          "incumbent_mean_brier_median": 0.4216005217532666,
-          "candidate_mean_brier_median": 0.24358493702179856
-        },
-        "16": {
-          "runs": 20,
-          "promoted": 20,
-          "mean_brier_gap_median": 0.1775930317100086,
-          "mean_brier_gap_range": [
-            0.16302442458933308,
-            0.3296726150884616
-          ],
-          "promotion_time_median": 209.5,
-          "promotion_time_range": [
-            117,
-            374
-          ],
-          "incumbent_mean_brier_median": 0.4214383449126873,
-          "candidate_mean_brier_median": 0.24356448596015784
-        },
-        "16-8": {
-          "runs": 20,
-          "promoted": 20,
-          "mean_brier_gap_median": 0.32401272566545003,
-          "mean_brier_gap_range": [
-            0.16430400099615783,
-            0.32855242400931156
-          ],
-          "promotion_time_median": 329.0,
-          "promotion_time_range": [
-            167,
-            442
-          ],
-          "incumbent_mean_brier_median": 0.567470847619289,
-          "candidate_mean_brier_median": 0.24323763063839138
-        }
-      },
-      "Phishing": {
-        "8": {
-          "runs": 20,
-          "promoted": 20,
-          "mean_brier_gap_median": 0.03725894700608319,
-          "mean_brier_gap_range": [
-            0.024066439728594895,
-            0.04895451040931821
-          ],
-          "promotion_time_median": 269.0,
-          "promotion_time_range": [
-            239,
-            349
-          ],
-          "incumbent_mean_brier_median": 0.20605613845523896,
-          "candidate_mean_brier_median": 0.16710850148234863
-        },
-        "16": {
-          "runs": 20,
-          "promoted": 20,
-          "mean_brier_gap_median": 0.03750278990396314,
-          "mean_brier_gap_range": [
-            0.019477974917145032,
-            0.04933922447471637
-          ],
-          "promotion_time_median": 265.0,
-          "promotion_time_range": [
-            235,
-            374
-          ],
-          "incumbent_mean_brier_median": 0.1626870706638569,
-          "candidate_mean_brier_median": 0.12494341256797346
-        },
-        "16-8": {
-          "runs": 20,
-          "promoted": 20,
-          "mean_brier_gap_median": 0.03554016653349777,
-          "mean_brier_gap_range": [
-            0.020284771778403404,
-            0.04935276228312262
-          ],
-          "promotion_time_median": 295.5,
-          "promotion_time_range": [
-            240,
-            380
-          ],
-          "incumbent_mean_brier_median": 0.20538062028962767,
-          "candidate_mean_brier_median": 0.17620774225416785
-        }
-      },
-      "Bananas": {
-        "8": {
-          "runs": 20,
-          "promoted": 20,
-          "mean_brier_gap_median": 0.016370742552427143,
-          "mean_brier_gap_range": [
-            0.005271549896901434,
-            0.0519759139460024
-          ],
-          "promotion_time_median": 870.5,
-          "promotion_time_range": [
-            256,
-            1909
-          ],
-          "incumbent_mean_brier_median": 0.24933844810536698,
-          "candidate_mean_brier_median": 0.23286009280561992
-        },
-        "16": {
-          "runs": 20,
-          "promoted": 20,
-          "mean_brier_gap_median": 0.017491107060830135,
-          "mean_brier_gap_range": [
-            0.009495115529158759,
-            0.02360350520087205
-          ],
-          "promotion_time_median": 1029.5,
-          "promotion_time_range": [
-            397,
-            1437
-          ],
-          "incumbent_mean_brier_median": 0.24964922445723586,
-          "candidate_mean_brier_median": 0.2320841144872911
-        },
-        "16-8": {
-          "runs": 20,
-          "promoted": 20,
-          "mean_brier_gap_median": 0.01857250962892374,
-          "mean_brier_gap_range": [
-            0.008677904889585725,
-            0.03183907519258131
-          ],
-          "promotion_time_median": 939.0,
-          "promotion_time_range": [
-            386,
-            1356
-          ],
-          "incumbent_mean_brier_median": 0.24647069665921387,
-          "candidate_mean_brier_median": 0.22917841116782892
-        }
-      }
     }
   }
 }

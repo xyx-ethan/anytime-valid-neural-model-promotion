@@ -1,278 +1,303 @@
 #!/usr/bin/env python3
-"""Machine-check the algebraic core and finite cases used in the proofs."""
+"""Verify the algebra and implementation used by the promotion gate.
+
+These checks verify transformations, numerical implementation, and finite
+special cases. General e-process validity for the weak average null is supplied
+by Theorem 3 of Choe and Ramdas (2024), not by this script.
+"""
 
 from __future__ import annotations
 
 import json
+import math
 from fractions import Fraction
 from itertools import product
 from pathlib import Path
-from typing import Iterator
 
+import numpy as np
 import sympy as sp
 
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT_PATH = ROOT / "analysis" / "proof_verification_report.json"
+ALPHA = 0.05
+SCALE = 0.5
+LAMBDA_GRID = np.linspace(0.0, 1.9, 17, dtype=np.float64)[1:]
 
 
-def compositions(total: int, parts: int) -> Iterator[tuple[int, ...]]:
-    """Yield nonnegative integer tuples of fixed length and sum."""
-    if parts == 1:
-        yield (total,)
-        return
-    for first in range(total + 1):
-        for rest in compositions(total - first, parts - 1):
-            yield (first, *rest)
+def psi_subexponential(values: np.ndarray) -> np.ndarray:
+    """Evaluate psi_E,c(lambda) for c=1/2."""
+    values = np.asarray(values, dtype=np.float64)
+    if np.any(values < 0.0) or np.any(values >= 1.0 / SCALE):
+        raise ValueError("lambda must lie in [0, 1/c)")
+    scaled = SCALE * values
+    return (-np.log1p(-scaled) - scaled) / SCALE**2
 
 
-def verify_symbolic_identities() -> dict[str, str]:
-    """Check the conditional-update and alpha-budget identities."""
-    previous, betting_fraction, conditional_mean = sp.symbols(
-        "previous betting_fraction conditional_mean",
-        nonnegative=True,
-        real=True,
+def reference_log_evidence(sequence: np.ndarray) -> np.ndarray:
+    """Direct matrix implementation of the finite-mixture e-process."""
+    values = np.asarray(sequence, dtype=np.float64)
+    cumulative = np.cumsum(values)
+    previous_average = np.zeros_like(values)
+    previous_average[1:] = cumulative[:-1] / np.arange(1, len(values))
+    center = np.clip(previous_average, -SCALE / 2.0, SCALE / 2.0)
+    intrinsic_time = np.cumsum((values - center) ** 2)
+    components = (
+        LAMBDA_GRID[:, None] * cumulative[None, :]
+        - psi_subexponential(LAMBDA_GRID)[:, None]
+        * intrinsic_time[None, :]
     )
-    update_remainder = sp.expand(
-        previous * (1 + betting_fraction * conditional_mean)
-        - previous
-        - previous * betting_fraction * conditional_mean
+    maximum = components.max(axis=0)
+    return maximum + np.log(
+        np.exp(components - maximum[None, :]).mean(axis=0)
     )
-    if update_remainder != 0:
-        raise AssertionError("One-step update identity failed")
 
-    mean = sp.symbols("mean", real=True)
-    weights = sp.symbols("w0:4", nonnegative=True)
-    capitals = sp.symbols("m0:4", nonnegative=True)
-    fractions = sp.symbols("l0:4", nonnegative=True)
-    updated_mixture = sum(
-        weight * capital * (1 + fraction * mean)
-        for weight, capital, fraction in zip(
-            weights,
-            capitals,
-            fractions,
-            strict=True,
+
+def streaming_log_evidence(sequence: np.ndarray) -> np.ndarray:
+    """Streaming implementation used independently for agreement checks."""
+    values = np.asarray(sequence, dtype=np.float64)
+    penalties = psi_subexponential(LAMBDA_GRID)
+    cumulative = 0.0
+    intrinsic_time = 0.0
+    output: list[float] = []
+    for index, value in enumerate(values, start=1):
+        previous_average = cumulative / (index - 1) if index > 1 else 0.0
+        center = float(
+            np.clip(previous_average, -SCALE / 2.0, SCALE / 2.0)
         )
-    )
-    previous_mixture = sum(
-        weight * capital
-        for weight, capital in zip(weights, capitals, strict=True)
-    )
-    expected_change = mean * sum(
-        weight * capital * fraction
-        for weight, capital, fraction in zip(
-            weights,
-            capitals,
-            fractions,
-            strict=True,
+        cumulative += float(value)
+        intrinsic_time += (float(value) - center) ** 2
+        components = LAMBDA_GRID * cumulative - penalties * intrinsic_time
+        maximum = float(components.max())
+        output.append(
+            maximum
+            + math.log(float(np.exp(components - maximum).mean()))
         )
-    )
-    if sp.simplify(updated_mixture - previous_mixture - expected_change) != 0:
-        raise AssertionError("Mixture update identity failed")
+    return np.asarray(output)
 
-    index, count = sp.symbols("index count", integer=True, positive=True)
-    partial_budget = sp.summation(1 / (index * (index + 1)), (index, 1, count))
-    if sp.simplify(partial_budget - count / (count + 1)) != 0:
-        raise AssertionError("Successive-candidate budget identity failed")
+
+def verify_weak_process_implementation() -> dict[str, object]:
+    """Compare two independent implementations on fixed and random paths."""
+    paths = [
+        np.asarray([-1.0, 0.0, 1.0, 0.5, -0.5, 1.0]),
+        np.ones(64),
+        -np.ones(64),
+        np.zeros(64),
+    ]
+    rng = np.random.default_rng(20260723)
+    paths.extend(rng.uniform(-1.0, 1.0, size=257) for _ in range(20))
+
+    maximum_error = 0.0
+    for path in paths:
+        direct = reference_log_evidence(path)
+        streaming = streaming_log_evidence(path)
+        maximum_error = max(
+            maximum_error,
+            float(np.max(np.abs(direct - streaming))),
+        )
+        if not np.allclose(direct, streaming, rtol=0.0, atol=1e-12):
+            raise AssertionError("Weak-null e-process implementations disagree")
+
+    if not np.all((LAMBDA_GRID >= 0.0) & (LAMBDA_GRID < 1.0 / SCALE)):
+        raise AssertionError("Mixture support falls outside [0, 1/c)")
+    if not np.all(psi_subexponential(LAMBDA_GRID) >= 0.0):
+        raise AssertionError("The sub-exponential penalty became negative")
 
     return {
-        "one_step_update": "M_prev * (1 + lambda * mu)",
-        "mixture_change": "mu * sum(w_i * M_i * lambda_i)",
-        "partial_alpha_budget": "sum_{j=1}^J 1/[j(j+1)] = J/(J+1)",
+        "paths_checked": len(paths),
+        "largest_absolute_log_evidence_difference": maximum_error,
+        "mixture_components": len(LAMBDA_GRID),
+        "lambda_min": float(LAMBDA_GRID.min()),
+        "lambda_max": float(LAMBDA_GRID.max()),
     }
 
 
-def verify_one_step_conditions() -> dict[str, int]:
-    """Exhaustively check exact finite distributions on a bounded support."""
-    support = (
-        Fraction(-1),
-        Fraction(-1, 2),
-        Fraction(0),
-        Fraction(1, 2),
-        Fraction(1),
-    )
-    betting_grid = tuple(Fraction(index, 16) for index in range(1, 17))
-    denominator = 8
-    null_distributions = 0
-    checked_updates = 0
-
-    for counts in compositions(denominator, len(support)):
-        probabilities = tuple(Fraction(value, denominator) for value in counts)
-        conditional_mean = sum(
-            probability * outcome
-            for probability, outcome in zip(
-                probabilities,
-                support,
-                strict=True,
-            )
+def verify_predictable_center_and_intrinsic_time() -> dict[str, object]:
+    """Check center bounds and monotonic intrinsic time on random paths."""
+    rng = np.random.default_rng(20260724)
+    minimum_increment = math.inf
+    maximum_center = 0.0
+    for _ in range(100):
+        values = rng.uniform(-1.0, 1.0, size=500)
+        cumulative = np.cumsum(values)
+        previous_average = np.zeros_like(values)
+        previous_average[1:] = cumulative[:-1] / np.arange(1, len(values))
+        center = np.clip(
+            previous_average,
+            -SCALE / 2.0,
+            SCALE / 2.0,
         )
-        if conditional_mean > 0:
-            continue
-        null_distributions += 1
-        for betting_fraction in betting_grid:
-            factors = tuple(1 + betting_fraction * outcome for outcome in support)
-            if min(factors) < 0:
-                raise AssertionError("A betting factor became negative")
-            expected_factor = sum(
-                probability * factor
-                for probability, factor in zip(
-                    probabilities,
-                    factors,
-                    strict=True,
-                )
-            )
-            if expected_factor != 1 + betting_fraction * conditional_mean:
-                raise AssertionError("Conditional expectation identity failed")
-            if expected_factor > 1:
-                raise AssertionError("Supermartingale update condition failed")
-            checked_updates += 1
-
+        increments = (values - center) ** 2
+        intrinsic_time = np.cumsum(increments)
+        minimum_increment = min(minimum_increment, float(increments.min()))
+        maximum_center = max(maximum_center, float(np.abs(center).max()))
+        if np.any(np.diff(intrinsic_time) < -1e-14):
+            raise AssertionError("Intrinsic time decreased")
+    if maximum_center > SCALE / 2.0 + 1e-14:
+        raise AssertionError("Predictable center exceeded its bound")
     return {
-        "null_distributions": null_distributions,
-        "betting_fractions_per_distribution": len(betting_grid),
-        "exact_updates": checked_updates,
+        "paths_checked": 100,
+        "observations_per_path": 500,
+        "maximum_absolute_center": maximum_center,
+        "minimum_intrinsic_time_increment": minimum_increment,
     }
 
 
-def path_crosses(
-    sequence: tuple[Fraction, ...],
-    betting_grid: tuple[Fraction, ...],
-    alpha: Fraction,
-) -> bool:
-    """Return whether a finite betting mixture crosses its threshold."""
-    capitals = [Fraction(1) for _ in betting_grid]
-    weight = Fraction(1, len(betting_grid))
-    threshold = 1 / alpha
-    for outcome in sequence:
-        capitals = [
-            capital * (1 + betting_fraction * outcome)
-            for capital, betting_fraction in zip(
-                capitals,
-                betting_grid,
-                strict=True,
-            )
-        ]
-        evidence = weight * sum(capitals)
-        if evidence >= threshold:
-            return True
-    return False
+def verify_finite_iid_null_special_cases() -> dict[str, object]:
+    """Enumerate short iid null paths and check crossing probabilities.
 
-
-def verify_finite_horizon_ville() -> dict[str, object]:
-    """Compute exact crossing probabilities for finite iid null models."""
-    support = (Fraction(-1), Fraction(0), Fraction(1))
-    betting_grid = (
-        Fraction(1, 4),
-        Fraction(1, 2),
-        Fraction(3, 4),
-        Fraction(1),
-    )
-    alpha = Fraction(1, 5)
+    This is a diagnostic special case, not a proof of the general weak-null
+    theorem. The coarse alpha and short horizon make threshold crossings
+    observable during exact enumeration.
+    """
+    support = np.asarray([-1.0, 0.0, 1.0])
     horizon = 8
-    sequences = tuple(product(support, repeat=horizon))
-    crossing = {
-        sequence: path_crosses(sequence, betting_grid, alpha)
-        for sequence in sequences
-    }
-
-    denominator = 6
-    checked_models = 0
-    maximum_probability = Fraction(0)
-    maximizing_counts: tuple[int, ...] | None = None
-    for counts in compositions(denominator, len(support)):
-        probabilities = tuple(Fraction(value, denominator) for value in counts)
-        mean = sum(
-            probability * outcome
-            for probability, outcome in zip(
-                probabilities,
-                support,
-                strict=True,
+    diagnostic_alpha = 0.2
+    threshold = math.log(1.0 / diagnostic_alpha)
+    paths = list(product(range(len(support)), repeat=horizon))
+    crossed = np.asarray(
+        [
+            bool(
+                np.any(
+                    reference_log_evidence(
+                        support[np.asarray(path, dtype=np.int64)]
+                    )
+                    >= threshold
+                )
             )
-        )
-        if mean > 0:
-            continue
-        checked_models += 1
-        crossing_probability = Fraction(0)
-        for sequence in sequences:
-            if not crossing[sequence]:
-                continue
-            path_probability = Fraction(1)
-            for outcome in sequence:
-                path_probability *= probabilities[support.index(outcome)]
-            crossing_probability += path_probability
-        if crossing_probability > alpha:
-            raise AssertionError("Finite-horizon crossing probability exceeded alpha")
-        if crossing_probability > maximum_probability:
-            maximum_probability = crossing_probability
-            maximizing_counts = counts
-
-    return {
-        "support": ["-1", "0", "1"],
-        "horizon": horizon,
-        "alpha": str(alpha),
-        "iid_null_models": checked_models,
-        "paths_per_model": len(sequences),
-        "maximum_crossing_probability": str(maximum_probability),
-        "maximizing_probability_counts_out_of_6": maximizing_counts,
-    }
-
-
-def verify_component_threshold() -> dict[str, int]:
-    """Check that one crossing component forces the mixture to cross."""
-    support = (Fraction(-1), Fraction(0), Fraction(1))
-    betting_grid = (
-        Fraction(1, 4),
-        Fraction(1, 2),
-        Fraction(3, 4),
-        Fraction(1),
+            for path in paths
+        ],
+        dtype=bool,
     )
-    selected_index = 1
-    weight = Fraction(1, len(betting_grid))
-    alpha = Fraction(1, 5)
-    component_threshold = 1 / (alpha * weight)
-    mixture_threshold = 1 / alpha
-    triggering_paths = 0
 
-    for sequence in product(support, repeat=8):
-        capitals = [Fraction(1) for _ in betting_grid]
-        for outcome in sequence:
-            capitals = [
-                capital * (1 + betting_fraction * outcome)
-                for capital, betting_fraction in zip(
-                    capitals,
-                    betting_grid,
-                    strict=True,
-                )
-            ]
-        if capitals[selected_index] < component_threshold:
-            continue
-        triggering_paths += 1
-        if weight * sum(capitals) < mixture_threshold:
-            raise AssertionError("Component crossing did not imply mixture crossing")
-
-    if triggering_paths == 0:
-        raise AssertionError("Threshold implication test had no triggering path")
+    models = (
+        (0.25, 0.50, 0.25),
+        (0.40, 0.40, 0.20),
+        (0.50, 0.50, 0.00),
+        (0.30, 0.50, 0.20),
+    )
+    probabilities: list[float] = []
+    for model in models:
+        mean = float(np.dot(model, support))
+        if mean > 1e-14:
+            raise AssertionError("Diagnostic model violates the iid null")
+        crossing_probability = 0.0
+        for path, path_crossed in zip(paths, crossed, strict=True):
+            if not path_crossed:
+                continue
+            path_probability = math.prod(model[index] for index in path)
+            crossing_probability += path_probability
+        probabilities.append(crossing_probability)
+        if crossing_probability > diagnostic_alpha + 1e-12:
+            raise AssertionError(
+                "Finite iid diagnostic exceeded its alpha threshold"
+            )
     return {
-        "enumerated_paths": len(support) ** 8,
-        "triggering_paths": triggering_paths,
+        "support": support.tolist(),
+        "horizon": horizon,
+        "diagnostic_alpha": diagnostic_alpha,
+        "null_models_checked": len(models),
+        "crossing_probabilities": probabilities,
+        "maximum_crossing_probability": max(probabilities),
     }
 
 
-def verify_conjunctive_logic() -> dict[str, int]:
-    """Check that joint promotion implies crossing of every component."""
+def verify_retention_transform() -> dict[str, object]:
+    """Check boundedness and the noninferiority-null mapping."""
+    difference, margin = sp.symbols("difference margin", real=True)
+    transformed = (difference + margin) / (1 + margin)
+    recovered = sp.simplify(transformed * (1 + margin) - margin)
+    if recovered != difference:
+        raise AssertionError("Retention transformation is not invertible")
+
+    margins = (0.01, 0.05, 0.25, 0.90)
+    grid = np.linspace(-1.0, 1.0, 2001)
+    for value in margins:
+        mapped = (grid + value) / (1.0 + value)
+        if mapped.min() < -1.0 - 1e-12 or mapped.max() > 1.0 + 1e-12:
+            raise AssertionError("Retention transform left [-1, 1]")
+        null_grid = grid[grid <= -value]
+        if np.any((null_grid + value) / (1.0 + value) > 1e-12):
+            raise AssertionError("Noninferiority null mapped above zero")
+    return {
+        "margins_checked": list(margins),
+        "difference_grid_points": len(grid),
+        "inverse_identity": "x = r(1 + delta) - delta",
+    }
+
+
+def verify_candidate_budget() -> dict[str, object]:
+    """Verify the successive-candidate alpha schedule symbolically and exactly."""
+    index, count = sp.symbols("index count", integer=True, positive=True)
+    identity = sp.summation(
+        1 / (index * (index + 1)),
+        (index, 1, count),
+    )
+    if sp.simplify(identity - count / (count + 1)) != 0:
+        raise AssertionError("Candidate alpha-budget identity failed")
+
+    alpha = Fraction(1, 20)
+    candidates = 10_000
+    spent = sum(
+        alpha / (candidate * (candidate + 1))
+        for candidate in range(1, candidates + 1)
+    )
+    expected = alpha * Fraction(candidates, candidates + 1)
+    if spent != expected or spent >= alpha:
+        raise AssertionError("Finite candidate alpha budget failed")
+    return {
+        "global_alpha": str(alpha),
+        "checked_candidates": candidates,
+        "spent_alpha": str(spent),
+        "partial_sum_identity": "sum_{j=1}^J 1/[j(j+1)] = J/(J+1)",
+    }
+
+
+def verify_conjunctive_gate() -> dict[str, object]:
+    """Exhaustively verify the intersection-union decision logic."""
     components = 4
-    checked_cases = 0
-    for crossing_pattern in product((False, True), repeat=components):
-        joint_promotion = all(crossing_pattern)
-        for null_component in range(components):
-            if joint_promotion and not crossing_pattern[null_component]:
+    patterns = list(product((False, True), repeat=components))
+    promoted_patterns = [pattern for pattern in patterns if all(pattern)]
+    if promoted_patterns != [(True, True, True, True)]:
+        raise AssertionError("Conjunctive gate accepted an incomplete pattern")
+    for pattern in patterns:
+        for true_null_component in range(components):
+            if all(pattern) and not pattern[true_null_component]:
                 raise AssertionError(
-                    "Joint promotion did not imply a null-component crossing"
+                    "Joint promotion omitted a true-null component crossing"
                 )
-            checked_cases += 1
     return {
         "components": components,
-        "logical_cases": checked_cases,
+        "crossing_patterns_checked": len(patterns),
+        "promoting_patterns": len(promoted_patterns),
+    }
+
+
+def verify_batch_boundaries() -> dict[str, object]:
+    """Check the conversion from label-level crossings to action times."""
+    batch_size = 128
+    horizon = 5_000
+    cases = {
+        1: 128,
+        127: 128,
+        128: 128,
+        129: 256,
+        4_993: 5_000,
+        5_000: 5_000,
+    }
+    for crossing, expected in cases.items():
+        observed = min(
+            int(math.ceil(crossing / batch_size) * batch_size),
+            horizon,
+        )
+        if observed != expected:
+            raise AssertionError(
+                f"Batch boundary mismatch: {crossing} -> {observed}"
+            )
+    return {
+        "batch_size": batch_size,
+        "horizon": horizon,
+        "cases_checked": len(cases),
     }
 
 
@@ -280,15 +305,21 @@ def main() -> None:
     report = {
         "status": "pass",
         "scope": (
-            "Exact algebra and finite discrete cases. Ville's inequality, the "
-            "positive-drift hitting-time result, and Wald's identity remain cited "
-            "external theorems."
+            "Algebra, two independent numerical implementations, finite iid "
+            "diagnostics, retention transformation, candidate alpha spending, "
+            "conjunctive logic, and batch-aligned action times. General validity "
+            "for the weak average null follows from Theorem 3 of Choe and Ramdas "
+            "(2024)."
         ),
-        "symbolic_identities": verify_symbolic_identities(),
-        "one_step_conditions": verify_one_step_conditions(),
-        "finite_horizon_ville": verify_finite_horizon_ville(),
-        "component_threshold": verify_component_threshold(),
-        "conjunctive_gate": verify_conjunctive_logic(),
+        "weak_process_implementation": verify_weak_process_implementation(),
+        "predictable_center_and_intrinsic_time": (
+            verify_predictable_center_and_intrinsic_time()
+        ),
+        "finite_iid_null_diagnostics": verify_finite_iid_null_special_cases(),
+        "retention_transform": verify_retention_transform(),
+        "candidate_alpha_budget": verify_candidate_budget(),
+        "conjunctive_gate": verify_conjunctive_gate(),
+        "batch_boundaries": verify_batch_boundaries(),
     }
     REPORT_PATH.write_text(json.dumps(report, indent=2), encoding="utf-8")
     print(json.dumps(report, indent=2))

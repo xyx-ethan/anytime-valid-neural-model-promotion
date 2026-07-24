@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the submission figure from the saved numerical source data."""
+"""Create the three submission figures from saved numerical results."""
 
 from __future__ import annotations
 
@@ -9,57 +9,56 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.colors import LinearSegmentedColormap
 
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "source_data"
+CONFIRMATION_DIR = DATA_DIR / "plasticity_retention_confirmation"
 FIGURE_DIR = ROOT / "figures"
-FIG_WIDTH_MM = 183.0
-FIG_HEIGHT_MM = 80.0
-FIG_HEIGHT_TALL_MM = 165.0
+
+WIDTH_MM = 183.0
 ALPHA = 0.05
-HORIZON = 1000
-CIFAR_C_HORIZON = 10_000
+HORIZON = 5_000
+RETENTION_MARGIN = 0.05
 
-CORRUPTION_LABELS = {
-    "gaussian_noise": "Gaussian noise",
-    "shot_noise": "Shot noise",
-    "impulse_noise": "Impulse noise",
-    "defocus_blur": "Defocus blur",
-    "glass_blur": "Glass blur",
-    "motion_blur": "Motion blur",
-    "zoom_blur": "Zoom blur",
-    "snow": "Snow",
-    "frost": "Frost",
-    "fog": "Fog",
-    "brightness": "Brightness",
-    "contrast": "Contrast",
-    "elastic_transform": "Elastic transform",
-    "pixelate": "Pixelate",
-    "jpeg_compression": "JPEG compression",
+METHOD_ORDER = (
+    "e-process",
+    "unadjusted 20-look test",
+    "Bonferroni 20-look test",
+)
+METHOD_LABELS = {
+    "e-process": "Anytime-valid process",
+    "unadjusted 20-look test": "Unadjusted repeated test",
+    "Bonferroni 20-look test": "Bonferroni repeated test",
 }
-
-COLORS = {
+METHOD_COLORS = {
     "e-process": "#315F78",
-    "unadjusted 20-look test": "#A65353",
-    "Bonferroni 20-look test": "#737F87",
-    "ink": "#20272C",
-    "muted": "#65727A",
-    "line": "#D2D8DC",
-    "light": "#F4F6F7",
+    "unadjusted 20-look test": "#9A5A5A",
+    "Bonferroni 20-look test": "#7A858C",
 }
-
-MARKERS = {
+METHOD_MARKERS = {
     "e-process": "o",
     "unadjusted 20-look test": "s",
     "Bonferroni 20-look test": "^",
 }
 
-LINESTYLES = {
-    "e-process": "-",
-    "unadjusted 20-look test": "--",
-    "Bonferroni 20-look test": ":",
+MODE_ORDER = ("replay", "naive", "no_update")
+MODE_LABELS = {
+    "replay": "Replay",
+    "naive": "Naive",
+    "no_update": "No update",
 }
+MODE_COLORS = {
+    "replay": "#315F78",
+    "naive": "#9A5A5A",
+    "no_update": "#7A858C",
+}
+
+INK = "#20272C"
+MUTED = "#66737B"
+GRID = "#D8DEE2"
+LIGHT = "#F4F6F7"
 
 mpl.rcParams.update(
     {
@@ -71,9 +70,14 @@ mpl.rcParams.update(
         "ytick.labelsize": 8.0,
         "legend.fontsize": 8.0,
         "axes.linewidth": 0.7,
+        "axes.edgecolor": INK,
+        "axes.labelcolor": INK,
+        "xtick.color": INK,
+        "ytick.color": INK,
         "axes.spines.top": False,
         "axes.spines.right": False,
         "legend.frameon": False,
+        "lines.linewidth": 1.1,
         "pdf.fonttype": 42,
         "ps.fonttype": 42,
         "svg.fonttype": "none",
@@ -83,349 +87,404 @@ mpl.rcParams.update(
 )
 
 
-def draw_false_promotion(axis: plt.Axes, source: pd.DataFrame) -> None:
-    panel = source[source["panel"] == "false_promotion"]
-    offsets = {
-        "e-process": -0.012,
-        "unadjusted 20-look test": 0.0,
-        "Bonferroni 20-look test": 0.012,
-    }
-    for method, offset in offsets.items():
-        data = panel[panel["method"] == method].sort_values("x")
-        x = data["x"].to_numpy(dtype=float) + offset
-        y = data["y"].to_numpy(dtype=float)
-        lower = data["lower"].to_numpy(dtype=float)
-        upper = data["upper"].to_numpy(dtype=float)
-        axis.errorbar(
-            x,
-            y,
-            yerr=np.vstack([y - lower, upper - y]),
-            color=COLORS[method],
-            marker=MARKERS[method],
-            linestyle=LINESTYLES[method],
-            linewidth=1.15,
-            markersize=4.2,
-            capsize=2.0,
-            capthick=0.7,
-            label=method,
-            zorder=3,
-        )
-    axis.axhline(ALPHA, color=COLORS["ink"], linewidth=0.8, linestyle=(0, (3, 2)), zorder=1)
-    axis.text(0.305, ALPHA + 0.004, "$\\alpha=0.05$", ha="right", va="bottom", color=COLORS["muted"])
-    axis.set_xlim(0.075, 0.325)
-    axis.set_ylim(0.0, 0.29)
-    axis.set_xticks([0.10, 0.20, 0.30])
-    axis.set_xlabel("Equal model error rate")
-    axis.set_ylabel("Probability of false promotion")
-    axis.grid(axis="y", color=COLORS["line"], linewidth=0.5)
-    axis.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.02),
-        ncol=3,
-        columnspacing=1.2,
-        handlelength=2.2,
-    )
-
-
-def draw_promotion_curve(axis: plt.Axes, source: pd.DataFrame) -> None:
-    panel = source[source["panel"] == "promotion_curve"]
-    for method in ("e-process", "unadjusted 20-look test", "Bonferroni 20-look test"):
-        data = panel[panel["method"] == method].sort_values("x")
-        axis.step(
-            data["x"],
-            data["y"],
-            where="post",
-            color=COLORS[method],
-            linestyle=LINESTYLES[method],
-            linewidth=1.25,
-            label=method,
-        )
-    axis.set_xlim(0, HORIZON)
-    axis.set_ylim(0.0, 1.02)
-    axis.set_xlabel("Observations")
-    axis.set_ylabel("Cumulative promotion probability")
-    axis.grid(axis="y", color=COLORS["line"], linewidth=0.5)
+def panel_label(axis: plt.Axes, label: str) -> None:
     axis.text(
-        0.03,
-        0.96,
-        "True loss advantage = 0.10",
+        -0.13,
+        1.04,
+        label,
         transform=axis.transAxes,
-        color=COLORS["muted"],
+        fontsize=9.0,
+        fontweight="bold",
         ha="left",
-        va="top",
+        va="bottom",
+        color=INK,
     )
-    axis.legend(loc="lower right", handlelength=2.4)
-
-
-def draw_neural_promotion(axis: plt.Axes, source: pd.DataFrame) -> None:
-    architecture_styles = {
-        "8": ("#315F78", "#B7C7D0", "o", -0.18, "MLP 8"),
-        "16": ("#737F87", "#C5CACD", "s", 0.0, "MLP 16"),
-        "16-8": ("#A65353", "#DDBABA", "^", 0.18, "MLP 16, 8"),
-        "ResNet-18": ("#536B52", "#C0CBBF", "D", 0.0, "ResNet-18"),
-    }
-    streams = ("Elec2", "Phishing", "Bananas", "CIFAR-10")
-    legend_added: set[str] = set()
-    for architecture, (
-        color,
-        light_color,
-        marker,
-        offset,
-        display_label,
-    ) in architecture_styles.items():
-        for stream_index, stream_name in enumerate(streams):
-            data = source[
-                (source["stream"] == stream_name)
-                & (source["architecture"] == architecture)
-            ]
-            if data["promotion_time"].isna().any():
-                raise ValueError(
-                    f"Missing promotion time for {stream_name}, {architecture}"
-                )
-            promotion_time = data["promotion_time"].to_numpy(dtype=float)
-            if len(promotion_time) == 0:
-                continue
-            y = np.full(len(promotion_time), stream_index + offset)
-            y += np.linspace(-0.035, 0.035, num=len(y))
-            axis.scatter(
-                promotion_time,
-                y,
-                color=light_color,
-                marker=marker,
-                edgecolor="none",
-                s=18,
-                zorder=2,
-            )
-            median = float(np.median(promotion_time))
-            lower = float(np.min(promotion_time))
-            upper = float(np.max(promotion_time))
-            axis.hlines(
-                stream_index + offset,
-                lower,
-                upper,
-                color=color,
-                linewidth=1.0,
-                zorder=1,
-            )
-            axis.scatter(
-                [median],
-                [stream_index + offset],
-                color=color,
-                marker=marker,
-                edgecolor="white",
-                linewidth=0.7,
-                s=38,
-                zorder=3,
-                label=display_label if architecture not in legend_added else None,
-            )
-            legend_added.add(architecture)
-    axis.set_xscale("log")
-    axis.set_xlim(80, 20_000)
-    axis.set_xticks([100, 300, 1000, 3000, 10_000])
-    axis.get_xaxis().set_major_formatter(mpl.ticker.ScalarFormatter())
-    axis.set_yticks(range(len(streams)), streams)
-    axis.set_ylim(len(streams) - 0.25, -0.62)
-    axis.set_xlabel("Post-warm-up observations to promotion")
-    axis.grid(axis="x", color=COLORS["line"], linewidth=0.5)
-    axis.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.53, 1.01),
-        ncol=4,
-        columnspacing=1.0,
-        handletextpad=0.4,
-    )
-
-
-def draw_corruption_promotion(axis: plt.Axes, source: pd.DataFrame) -> None:
-    observed = set(source["corruption"])
-    expected = set(CORRUPTION_LABELS)
-    if observed != expected:
-        raise ValueError(
-            "CIFAR-10-C corruption mismatch: "
-            f"missing={sorted(expected - observed)}, "
-            f"unexpected={sorted(observed - expected)}"
-        )
-
-    color = "#536B52"
-    light_color = "#C0CBBF"
-    ordered_corruptions = sorted(
-        CORRUPTION_LABELS,
-        key=lambda name: float(
-            source.loc[source["corruption"] == name, "promotion_time"]
-            .fillna(CIFAR_C_HORIZON)
-            .median()
-        ),
-    )
-
-    for row, corruption in enumerate(ordered_corruptions):
-        data = (
-            source.loc[source["corruption"] == corruption]
-            .sort_values("seed")
-            .reset_index(drop=True)
-        )
-        y = row + np.linspace(-0.13, 0.13, num=len(data))
-        promoted = data["promotion_time"].notna().to_numpy()
-        values = data["promotion_time"].to_numpy(dtype=float)
-
-        if promoted.any():
-            axis.scatter(
-                values[promoted],
-                y[promoted],
-                color=light_color,
-                marker="o",
-                edgecolor=color,
-                linewidth=0.45,
-                s=24,
-                zorder=2,
-            )
-        if (~promoted).any():
-            axis.scatter(
-                np.full((~promoted).sum(), CIFAR_C_HORIZON),
-                y[~promoted],
-                facecolor="white",
-                edgecolor=color,
-                marker=">",
-                linewidth=0.9,
-                s=32,
-                zorder=3,
-            )
-
-        if promoted.all():
-            axis.hlines(
-                row,
-                float(np.min(values)),
-                float(np.max(values)),
-                color=color,
-                linewidth=1.0,
-                zorder=1,
-            )
-            axis.scatter(
-                [float(np.median(values))],
-                [row],
-                color=color,
-                marker="D",
-                edgecolor="white",
-                linewidth=0.65,
-                s=34,
-                zorder=4,
-            )
-
-    axis.scatter(
-        [],
-        [],
-        color=light_color,
-        edgecolor=color,
-        linewidth=0.45,
-        marker="o",
-        s=24,
-        label="individual run",
-    )
-    if source["promotion_time"].isna().any():
-        axis.scatter(
-            [],
-            [],
-            facecolor="white",
-            edgecolor=color,
-            marker=">",
-            linewidth=0.9,
-            s=32,
-            label="no promotion by 10,000",
-        )
-    axis.scatter(
-        [],
-        [],
-        color=color,
-        edgecolor="white",
-        linewidth=0.65,
-        marker="D",
-        s=34,
-        label="median and range",
-    )
-    axis.set_xscale("log")
-    axis.set_xlim(250, 13_000)
-    axis.set_xticks([300, 1000, 3000, 10_000])
-    axis.get_xaxis().set_major_formatter(mpl.ticker.ScalarFormatter())
-    axis.set_yticks(
-        range(len(ordered_corruptions)),
-        [CORRUPTION_LABELS[name] for name in ordered_corruptions],
-    )
-    axis.set_ylim(len(ordered_corruptions) - 0.45, -0.55)
-    axis.set_xlabel("Labeled observations to promotion on both metrics")
-    axis.grid(axis="x", color=COLORS["line"], linewidth=0.5)
-    axis.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.55, 1.06),
-        ncol=3 if source["promotion_time"].isna().any() else 2,
-        columnspacing=1.2,
-        handletextpad=0.4,
-    )
-
-
-def make_figure(
-    source: pd.DataFrame,
-    neural_source: pd.DataFrame,
-    corruption_source: pd.DataFrame,
-) -> None:
-    figure_specs = (
-        ("Fig1", draw_false_promotion, 0.11, FIG_HEIGHT_MM),
-        ("Fig2", draw_promotion_curve, 0.11, FIG_HEIGHT_MM),
-        (
-            "Fig3",
-            lambda axis, _: draw_neural_promotion(axis, neural_source),
-            0.10,
-            FIG_HEIGHT_MM,
-        ),
-        (
-            "Fig4",
-            lambda axis, _: draw_corruption_promotion(
-                axis,
-                corruption_source,
-            ),
-            0.19,
-            FIG_HEIGHT_TALL_MM,
-        ),
-    )
-    for name, draw, left_margin, height_mm in figure_specs:
-        figure, axis = plt.subplots(
-            figsize=(FIG_WIDTH_MM / 25.4, height_mm / 25.4),
-            constrained_layout=False,
-        )
-        figure.subplots_adjust(
-            left=left_margin,
-            right=0.985,
-            bottom=0.12 if name == "Fig4" else 0.20,
-            top=0.96 if name == "Fig4" else 0.95,
-        )
-        draw(axis, source)
-        save_figure(figure, name)
-        plt.close(figure)
 
 
 def save_figure(figure: plt.Figure, name: str) -> None:
-    output_base = FIGURE_DIR / name
-    figure.savefig(output_base.with_suffix(".pdf"))
-    figure.savefig(output_base.with_suffix(".svg"))
-    figure.savefig(output_base.with_suffix(".eps"))
+    FIGURE_DIR.mkdir(parents=True, exist_ok=True)
+    base = FIGURE_DIR / name
+    figure.savefig(base.with_suffix(".pdf"))
+    figure.savefig(base.with_suffix(".svg"))
+    figure.savefig(base.with_suffix(".eps"))
     figure.savefig(
-        output_base.with_suffix(".tiff"),
+        base.with_suffix(".tiff"),
         dpi=600,
         pil_kwargs={"compression": "tiff_lzw"},
     )
-    figure.savefig(output_base.with_suffix(".png"), dpi=600)
+    figure.savefig(base.with_suffix(".png"), dpi=600)
     figure.savefig(FIGURE_DIR / f"{name}_preview.png", dpi=300)
 
 
-def main() -> None:
-    source = pd.read_csv(DATA_DIR / "Figure1_source_data.csv")
-    neural_source = pd.read_csv(DATA_DIR / "Neural_stream_results.csv")
-    image_source = pd.read_csv(
-        DATA_DIR / "cifar10_stream" / "CIFAR10_neural_stream_results.csv"
-    ).rename(columns={"dataset": "stream"})
-    corruption_source = pd.read_csv(
-        DATA_DIR / "cifar10c_stream" / "CIFAR10C_stream_results.csv"
+def figure_one(simulation: pd.DataFrame) -> None:
+    figure, axes = plt.subplots(
+        1,
+        2,
+        figsize=(WIDTH_MM / 25.4, 82.0 / 25.4),
+        gridspec_kw={"wspace": 0.30},
     )
-    neural_source = pd.concat([neural_source, image_source], ignore_index=True)
-    make_figure(source, neural_source, corruption_source)
+
+    independent = simulation.loc[
+        simulation["panel"] == "false_promotion"
+    ].copy()
+    dependent = simulation.loc[
+        simulation["panel"] == "dependent_false_promotion"
+    ].copy()
+    dependent["scenario"] = "serial dependence"
+    null_data = pd.concat([independent, dependent], ignore_index=True)
+    scenario_order = (
+        "equal error 0.10",
+        "equal error 0.20",
+        "equal error 0.30",
+        "serial dependence",
+    )
+    scenario_labels = ("0.10", "0.20", "0.30", "Dependent")
+    x_base = np.arange(len(scenario_order), dtype=float)
+    offsets = (-0.18, 0.0, 0.18)
+
+    for method, offset in zip(METHOD_ORDER, offsets, strict=True):
+        values = (
+            null_data.loc[null_data["method"] == method]
+            .set_index("scenario")
+            .loc[list(scenario_order)]
+        )
+        y = values["y"].to_numpy(dtype=float)
+        lower = values["lower"].to_numpy(dtype=float)
+        upper = values["upper"].to_numpy(dtype=float)
+        axes[0].errorbar(
+            x_base + offset,
+            y,
+            yerr=np.vstack([y - lower, upper - y]),
+            color=METHOD_COLORS[method],
+            marker=METHOD_MARKERS[method],
+            linestyle="none",
+            markersize=4.5,
+            capsize=2.0,
+            capthick=0.7,
+            label=METHOD_LABELS[method],
+            zorder=3,
+        )
+    axes[0].axhline(
+        ALPHA,
+        color=INK,
+        linewidth=0.8,
+        linestyle=(0, (3, 2)),
+        zorder=1,
+    )
+    axes[0].text(
+        3.28,
+        ALPHA + 0.006,
+        r"$\alpha=0.05$",
+        ha="right",
+        va="bottom",
+        color=MUTED,
+    )
+    axes[0].set_xticks(x_base, scenario_labels)
+    axes[0].set_xlabel("Null setting")
+    axes[0].set_ylabel("False-promotion probability")
+    axes[0].set_ylim(0.0, 0.215)
+    axes[0].grid(axis="y", color=GRID, linewidth=0.5)
+    panel_label(axes[0], "a")
+
+    promotion = simulation.loc[
+        simulation["panel"] == "promotion_summary"
+    ].copy()
+    for method, offset in zip(METHOD_ORDER, (-0.004, 0.0, 0.004), strict=True):
+        values = promotion.loc[promotion["method"] == method].sort_values("x")
+        x = values["x"].to_numpy(dtype=float) + offset
+        y = values["y"].to_numpy(dtype=float)
+        lower = values["lower"].to_numpy(dtype=float)
+        upper = values["upper"].to_numpy(dtype=float)
+        axes[1].errorbar(
+            x,
+            y,
+            yerr=np.vstack([y - lower, upper - y]),
+            color=METHOD_COLORS[method],
+            marker=METHOD_MARKERS[method],
+            linestyle="-",
+            markersize=4.5,
+            capsize=2.0,
+            capthick=0.7,
+            label=METHOD_LABELS[method],
+        )
+    axes[1].set_xlim(0.035, 0.215)
+    axes[1].set_ylim(0.0, 1.04)
+    axes[1].set_xticks([0.05, 0.10, 0.20])
+    axes[1].set_xlabel("True loss advantage")
+    axes[1].set_ylabel("Promotion probability by 1,000")
+    axes[1].grid(axis="y", color=GRID, linewidth=0.5)
+    panel_label(axes[1], "b")
+
+    handles, labels = axes[0].get_legend_handles_labels()
+    figure.legend(
+        handles,
+        labels,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.01),
+        ncol=3,
+        columnspacing=1.4,
+        handletextpad=0.5,
+    )
+    figure.subplots_adjust(left=0.09, right=0.985, bottom=0.20, top=0.82)
+    save_figure(figure, "Fig1")
+    plt.close(figure)
+
+
+def draw_seed_summary(
+    axis: plt.Axes,
+    results: pd.DataFrame,
+    value_column: str,
+    ylabel: str,
+    reference: float,
+) -> None:
+    for mode_index, mode in enumerate(MODE_ORDER):
+        values = (
+            results.loc[results["candidate_mode"] == mode]
+            .sort_values("seed")[value_column]
+            .to_numpy(dtype=float)
+        )
+        jitter = np.linspace(-0.045, 0.045, len(values))
+        axis.scatter(
+            np.full(len(values), mode_index) + jitter,
+            values,
+            s=22,
+            color=MODE_COLORS[mode],
+            edgecolor="white",
+            linewidth=0.45,
+            zorder=3,
+        )
+        axis.vlines(
+            mode_index,
+            values.min(),
+            values.max(),
+            color=MODE_COLORS[mode],
+            linewidth=1.0,
+            zorder=2,
+        )
+        axis.scatter(
+            mode_index,
+            np.median(values),
+            marker="D",
+            s=40,
+            color=MODE_COLORS[mode],
+            edgecolor="white",
+            linewidth=0.65,
+            zorder=4,
+        )
+    axis.axhline(
+        reference,
+        color=INK,
+        linewidth=0.8,
+        linestyle=(0, (3, 2)),
+        zorder=1,
+    )
+    axis.set_xticks(range(len(MODE_ORDER)), [MODE_LABELS[m] for m in MODE_ORDER])
+    axis.set_ylabel(ylabel)
+    axis.grid(axis="y", color=GRID, linewidth=0.5)
+
+
+def figure_two(results: pd.DataFrame) -> None:
+    required = {
+        "current_mean_brier_advantage",
+        "current_mean_error_advantage",
+        "retention_mean_brier_difference",
+        "retention_mean_error_difference",
+    }
+    missing = required - set(results.columns)
+    if missing:
+        raise ValueError(f"Confirmation results lack columns: {sorted(missing)}")
+
+    plot_data = results.copy()
+    plot_data["old_task_brier_increase"] = -plot_data[
+        "retention_mean_brier_difference"
+    ]
+    plot_data["old_task_error_increase"] = -plot_data[
+        "retention_mean_error_difference"
+    ]
+    figure, axes = plt.subplots(
+        2,
+        2,
+        figsize=(WIDTH_MM / 25.4, 126.0 / 25.4),
+        gridspec_kw={"hspace": 0.42, "wspace": 0.30},
+    )
+    specifications = (
+        (
+            "current_mean_brier_advantage",
+            "New-task Brier advantage",
+            0.0,
+        ),
+        (
+            "current_mean_error_advantage",
+            "New-task error advantage",
+            0.0,
+        ),
+        (
+            "old_task_brier_increase",
+            "Old-task Brier increase",
+            RETENTION_MARGIN,
+        ),
+        (
+            "old_task_error_increase",
+            "Old-task error increase",
+            RETENTION_MARGIN,
+        ),
+    )
+    for label, axis, spec in zip(
+        ("a", "b", "c", "d"),
+        axes.flat,
+        specifications,
+        strict=True,
+    ):
+        value_column, ylabel, reference = spec
+        draw_seed_summary(
+            axis,
+            plot_data,
+            value_column,
+            ylabel,
+            reference,
+        )
+        panel_label(axis, label)
+    figure.subplots_adjust(left=0.10, right=0.985, bottom=0.10, top=0.96)
+    save_figure(figure, "Fig2")
+    plt.close(figure)
+
+
+def figure_three(results: pd.DataFrame) -> None:
+    component_columns = (
+        "current_brier_crossing_index",
+        "current_error_crossing_index",
+        "retention_brier_crossing_index",
+        "retention_error_crossing_index",
+    )
+    component_labels = (
+        "New Brier",
+        "New error",
+        "Old Brier",
+        "Old error",
+    )
+    figure, axes = plt.subplots(
+        1,
+        2,
+        figsize=(WIDTH_MM / 25.4, 84.0 / 25.4),
+        gridspec_kw={"width_ratios": (1.15, 1.0), "wspace": 0.38},
+    )
+
+    for mode_index, mode in enumerate(MODE_ORDER):
+        mode_data = results.loc[
+            results["candidate_mode"] == mode
+        ].sort_values("seed")
+        promotion = mode_data["plasticity_retention_promotion_time"]
+        promoted = promotion.notna().to_numpy()
+        y = np.full(len(mode_data), mode_index, dtype=float)
+        y += np.linspace(-0.12, 0.12, len(mode_data))
+        if promoted.any():
+            axes[0].scatter(
+                promotion.to_numpy(dtype=float)[promoted],
+                y[promoted],
+                color=MODE_COLORS[mode],
+                s=26,
+                edgecolor="white",
+                linewidth=0.5,
+                zorder=3,
+            )
+        if (~promoted).any():
+            axes[0].scatter(
+                np.full((~promoted).sum(), HORIZON * 1.045),
+                y[~promoted],
+                facecolor="white",
+                edgecolor=MODE_COLORS[mode],
+                marker=">",
+                linewidth=1.0,
+                s=34,
+                zorder=3,
+            )
+    axes[0].set_xlim(0, HORIZON * 1.10)
+    axes[0].set_xticks([0, 1_000, 2_000, 3_000, 4_000, 5_000])
+    axes[0].set_yticks(
+        range(len(MODE_ORDER)),
+        [MODE_LABELS[m] for m in MODE_ORDER],
+    )
+    axes[0].set_ylim(len(MODE_ORDER) - 0.5, -0.5)
+    axes[0].set_xlabel("Observations per stream at promotion")
+    axes[0].grid(axis="x", color=GRID, linewidth=0.5)
+    panel_label(axes[0], "a")
+
+    pass_counts = np.asarray(
+        [
+            [
+                int(
+                    results.loc[
+                        results["candidate_mode"] == mode,
+                        column,
+                    ].notna().sum()
+                )
+                for column in component_columns
+            ]
+            for mode in MODE_ORDER
+        ],
+        dtype=float,
+    )
+    cmap = LinearSegmentedColormap.from_list(
+        "neutral_blue",
+        ["#F4F6F7", "#AFC2CC", "#315F78"],
+    )
+    axes[1].imshow(
+        pass_counts,
+        cmap=cmap,
+        vmin=0,
+        vmax=5,
+        interpolation="nearest",
+        aspect="auto",
+    )
+    for row in range(pass_counts.shape[0]):
+        for column in range(pass_counts.shape[1]):
+            value = int(pass_counts[row, column])
+            text_color = "white" if value >= 4 else INK
+            axes[1].text(
+                column,
+                row,
+                f"{value}/5",
+                ha="center",
+                va="center",
+                color=text_color,
+                fontweight="bold",
+            )
+    axes[1].set_xticks(range(4), component_labels, rotation=20, ha="right")
+    axes[1].set_yticks(
+        range(len(MODE_ORDER)),
+        [MODE_LABELS[m] for m in MODE_ORDER],
+    )
+    axes[1].tick_params(length=0)
+    for spine in axes[1].spines.values():
+        spine.set_visible(False)
+    axes[1].set_xlabel("Component requirements crossed")
+    panel_label(axes[1], "b")
+
+    figure.subplots_adjust(left=0.10, right=0.985, bottom=0.21, top=0.95)
+    save_figure(figure, "Fig3")
+    plt.close(figure)
+
+
+def validate_confirmation_results(results: pd.DataFrame) -> None:
+    if len(results) != 15:
+        raise ValueError(f"Expected 15 confirmation rows, found {len(results)}")
+    if set(results["seed"]) != {1, 2, 3, 4, 5}:
+        raise ValueError("Confirmation results must contain seeds 1-5")
+    if set(results["candidate_mode"]) != set(MODE_ORDER):
+        raise ValueError("Confirmation results must contain all candidate modes")
+    if set(results["evaluation_split"]) != {"confirmation"}:
+        raise ValueError("Only confirmation-partition results may be plotted")
+
+
+def main() -> None:
+    simulation = pd.read_csv(DATA_DIR / "Figure1_source_data.csv")
+    confirmation = pd.read_csv(
+        CONFIRMATION_DIR / "Split_CIFAR10_candidate_results.csv"
+    )
+    validate_confirmation_results(confirmation)
+    figure_one(simulation)
+    figure_two(confirmation)
+    figure_three(confirmation)
 
 
 if __name__ == "__main__":

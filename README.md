@@ -1,9 +1,9 @@
-# Anytime-Valid Multi-Metric Promotion of Neural Networks in Data Streams
+# Anytime-Valid Gates for Plasticity and Retention in Continual Learning
 
-This repository contains the analysis, numerical source data, figures, and
+This repository contains the analysis code, numerical source data, figures, and
 proof checks for the article.
 
-## Reproduction
+## Statistical simulations and proof checks
 
 Create a Python environment and install the recorded dependencies:
 
@@ -12,7 +12,8 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 ```
 
-Run the analysis and proof checks from the project root:
+Reproduce the false-promotion simulations, verify the implementation, and
+rebuild the figures:
 
 ```bash
 .venv/bin/python analysis/run_analysis.py
@@ -20,56 +21,70 @@ Run the analysis and proof checks from the project root:
 .venv/bin/python analysis/make_figure.py
 ```
 
-The tabular-stream evaluation takes about three minutes on a current desktop CPU. The public streams are provided by River. The analysis fixes the simulation seed, network initialization seeds, stream order, warm-up length, and model hyperparameters.
+The simulation uses 8,000 runs, a horizon of 1,000 observations, and the fixed
+seed recorded in `analysis/run_analysis.py`.
 
-The image-stream experiments require PyTorch and torchvision. They were run
-with the NVIDIA PyTorch 26.01 container:
+## Split CIFAR-10 experiment
 
-```bash
-docker run --rm --gpus all --ipc=host \
-  -v "$PWD":/workspace -w /workspace \
-  nvcr.io/nvidia/pytorch:26.01-py3 \
-  python analysis/run_cifar_stream.py
-```
+The neural experiment uses PyTorch and torchvision from the NVIDIA PyTorch
+26.01 container. The script downloads CIFAR-10, creates mutually exclusive
+model-fitting, development, and confirmation partitions, trains the initial
+ResNet-18, adapts three candidates, freezes them, and evaluates the four
+promotion requirements.
 
-The script downloads CIFAR-10, creates the warm-up and stream partitions independently for each seed, trains the common ResNet-18 starting point, and records prequential Brier-loss and classification-error differences before updating the candidate. The reported promotion time is the first point by which both prespecified evidence processes have crossed their thresholds.
-
-The CIFAR-10-C experiment uses the 15 original corruption arrays from the
-official benchmark release. Download and extract the archive into
-`.data/CIFAR-10-C`, then run:
+The confirmation configuration can be reproduced with:
 
 ```bash
 docker run --rm --gpus all --ipc=host \
   -v "$PWD":/workspace -w /workspace \
   nvcr.io/nvidia/pytorch:26.01-py3 \
-  python analysis/run_cifar10c_stream.py \
-    --cifar10c-dir /workspace/.data/CIFAR-10-C \
-    --seeds 0 1 2 --warmup-epochs 20 --batch-size 256
+  python analysis/run_plasticity_retention_stream.py \
+    --data-dir .data \
+    --initial-epochs 20 \
+    --adaptation-epochs 5 \
+    --adaptation-size 15000 \
+    --evaluation-size 5000 \
+    --batch-size 128 \
+    --adaptation-learning-rate 0.003 \
+    --replay-size 15000 \
+    --replay-ratio 3.25 \
+    --candidate-modes replay naive no_update \
+    --evaluation-split confirmation \
+    --partition-seed 20260723 \
+    --output-dir reproduced_confirmation \
+    --seeds 1 2 3 4 5
 ```
 
-For each seed, the script trains one clean starting model and evaluates every
-corruption from that same model. Each base test image appears once in a
-10,000-image stream, and severity increases in five blocks. All predictions
-are recorded before the candidate receives the corresponding labels.
+The reported seeds were executed independently. Outputs from independent runs
+can be checked and combined with:
 
-## Outputs
+```bash
+.venv/bin/python analysis/merge_confirmation_outputs.py \
+  --input-root independent_runs \
+  --output-dir reproduced_confirmation
+```
 
-`source_data/analysis_summary.json` contains the simulation and tabular-stream
-summaries. `source_data/Figure1_source_data.csv` contains simulation summaries
-and stream trajectories. `source_data/Neural_stream_results.csv` contains one
-row for each tabular dataset, network architecture, and initialization.
-`source_data/cifar10_stream/` contains the corresponding clean CIFAR-10
-summaries and complete paired sequences.
-`source_data/cifar10c_stream/` contains the CIFAR-10-C summaries and paired
-sequences for all 15 corruption types. The submitted PDF and SVG figures are
-included in `figures/`; running `analysis/make_figure.py` also creates EPS,
-TIFF, and PNG exports.
+The development grid and its frozen selection rule are recorded in
+`source_data/plasticity_retention_development/`. Each row gives the replay
+ratio, learning rate, seed, evaluation partition, four crossing outcomes, and
+performance summaries used for selection.
 
-`analysis/proof_verification_report.json` records symbolic and finite-case checks of the algebra used in the proofs. These checks support the implementation; the cited probability theorems remain external mathematical results.
+## Included outputs
+
+`source_data/Figure1_source_data.csv` and
+`source_data/analysis_summary.json` contain the simulation results.
+`source_data/plasticity_retention_confirmation/` contains the five-seed
+candidate table, initial-model table, run metadata, and all 60 paired
+difference arrays. Figures 1-3 are included as PDF and SVG files.
+
+`analysis/proof_verification_report.json` records symbolic checks, direct
+agreement tests between two implementations of the evidence process, and
+finite checks of the conjunctive rule. The cited probability theorem supplies
+the general time-uniform guarantee.
 
 ## Data and licensing
 
-The repository does not redistribute CIFAR-10, CIFAR-10-C, or the River
-datasets. Those datasets retain their original terms. The paired loss
-sequences and numerical summaries included here are generated analysis
-outputs. The analysis code is released under the MIT License.
+The repository does not redistribute CIFAR-10 images. Those data retain their
+original terms. The generated paired-loss arrays and numerical summaries are
+included for independent verification. The analysis code is released under
+the MIT License.

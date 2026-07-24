@@ -1,39 +1,60 @@
 {
   "status": "pass",
-  "scope": "Exact algebra and finite discrete cases. Ville's inequality, the positive-drift hitting-time result, and Wald's identity remain cited external theorems.",
-  "symbolic_identities": {
-    "one_step_update": "M_prev * (1 + lambda * mu)",
-    "mixture_change": "mu * sum(w_i * M_i * lambda_i)",
-    "partial_alpha_budget": "sum_{j=1}^J 1/[j(j+1)] = J/(J+1)"
+  "scope": "Algebra, two independent numerical implementations, finite iid diagnostics, retention transformation, candidate alpha spending, conjunctive logic, and batch-aligned action times. General validity for the weak average null follows from Theorem 3 of Choe and Ramdas (2024).",
+  "weak_process_implementation": {
+    "paths_checked": 24,
+    "largest_absolute_log_evidence_difference": 8.881784197001252e-16,
+    "mixture_components": 16,
+    "lambda_min": 0.11875,
+    "lambda_max": 1.9
   },
-  "one_step_conditions": {
-    "null_distributions": 264,
-    "betting_fractions_per_distribution": 16,
-    "exact_updates": 4224
+  "predictable_center_and_intrinsic_time": {
+    "paths_checked": 100,
+    "observations_per_path": 500,
+    "maximum_absolute_center": 0.25,
+    "minimum_intrinsic_time_increment": 5.2824568882180445e-09
   },
-  "finite_horizon_ville": {
+  "finite_iid_null_diagnostics": {
     "support": [
-      "-1",
-      "0",
-      "1"
+      -1.0,
+      0.0,
+      1.0
     ],
     "horizon": 8,
-    "alpha": "1/5",
-    "iid_null_models": 16,
-    "paths_per_model": 6561,
-    "maximum_crossing_probability": "5/64",
-    "maximizing_probability_counts_out_of_6": [
-      3,
-      0,
-      3
-    ]
+    "diagnostic_alpha": 0.2,
+    "null_models_checked": 4,
+    "crossing_probabilities": [
+      0.0089111328125,
+      0.002035199999999998,
+      0.0,
+      0.00292
+    ],
+    "maximum_crossing_probability": 0.0089111328125
   },
-  "component_threshold": {
-    "enumerated_paths": 6561,
-    "triggering_paths": 1
+  "retention_transform": {
+    "margins_checked": [
+      0.01,
+      0.05,
+      0.25,
+      0.9
+    ],
+    "difference_grid_points": 2001,
+    "inverse_identity": "x = r(1 + delta) - delta"
+  },
+  "candidate_alpha_budget": {
+    "global_alpha": "1/20",
+    "checked_candidates": 10000,
+    "spent_alpha": "500/10001",
+    "partial_sum_identity": "sum_{j=1}^J 1/[j(j+1)] = J/(J+1)"
   },
   "conjunctive_gate": {
     "components": 4,
-    "logical_cases": 64
+    "crossing_patterns_checked": 16,
+    "promoting_patterns": 1
+  },
+  "batch_boundaries": {
+    "batch_size": 128,
+    "horizon": 5000,
+    "cases_checked": 6
   }
 }

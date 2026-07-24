@@ -1,0 +1,11 @@
+{
+  "selection_partition": "development",
+  "configuration_freeze_date": "2026-07-23",
+  "configurations_evaluated": 16,
+  "selection_rule": "Among configurations whose four evidence components crossed by 5,000 observations, select the largest mean new-task classification-error advantage; break ties with the smaller replay ratio.",
+  "selected_replay_ratio": 3.25,
+  "selected_adaptation_learning_rate": 0.003,
+  "selected_current_mean_error_advantage": 0.3254,
+  "selected_plasticity_retention_promotion_time": 2176,
+  "confirmation_inspected_before_freeze": false
+}

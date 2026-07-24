@@ -1,19 +1,15 @@
 #!/usr/bin/env python3
-"""Reproduce the simulations and tabular neural-stream analyses."""
+"""Reproduce the false-promotion and detection simulations."""
 
 from __future__ import annotations
 
-import copy
 import json
 import math
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from river import datasets
 from scipy.stats import binom
-from sklearn.neural_network import MLPClassifier
-from sklearn.preprocessing import StandardScaler
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,15 +21,9 @@ RUNS = 8000
 HORIZON = 1000
 ALPHA = 0.05
 LOOKS = np.arange(50, HORIZON + 1, 50)
-LAMBDA_GRID = np.linspace(0.0, 1.0, 17)[1:]
-NEURAL_WARMUP = 600
-NEURAL_BATCH_SIZE = 32
-NEURAL_SEEDS = tuple(range(20))
-NEURAL_ARCHITECTURES = {
-    "8": (8,),
-    "16": (16,),
-    "16-8": (16, 8),
-}
+EVIDENCE_SCALE = 0.5
+LAMBDA_GRID = np.linspace(0.0, 1.9, 17)[1:]
+STRONG_LAMBDA_GRID = np.linspace(0.0, 1.0, 17)[1:]
 
 def paired_binary_losses(
     rng: np.random.Generator,
@@ -64,21 +54,52 @@ def dependent_null_losses(rng: np.random.Generator) -> np.ndarray:
     return differences
 
 
+def subexponential_psi(values: np.ndarray) -> np.ndarray:
+    """Return the sub-exponential CGF-like function."""
+    scaled = EVIDENCE_SCALE * values
+    return (-np.log1p(-scaled) - scaled) / EVIDENCE_SCALE**2
+
+
 def mixture_log_evidence(differences: np.ndarray) -> np.ndarray:
-    """Return the log of the equally weighted betting mixture at every time."""
-    log_mixture = np.full(differences.shape, -np.inf, dtype=np.float64)
-    with np.errstate(divide="ignore", invalid="ignore"):
-        for betting_fraction in LAMBDA_GRID:
-            log_factors = np.log1p(betting_fraction * differences)
-            component = np.cumsum(log_factors, axis=1)
-            log_mixture = np.logaddexp(log_mixture, component)
+    """Return weak-null mixture log evidence at every time."""
+    values = np.asarray(differences, dtype=np.float64)
+    cumulative = np.cumsum(values, axis=1)
+    previous_average = np.zeros_like(values)
+    previous_average[:, 1:] = (
+        cumulative[:, :-1] / np.arange(1, values.shape[1])
+    )
+    predictable_center = np.clip(
+        previous_average,
+        -EVIDENCE_SCALE / 2.0,
+        EVIDENCE_SCALE / 2.0,
+    )
+    intrinsic_time = np.cumsum(
+        (values - predictable_center) ** 2,
+        axis=1,
+    )
+
+    log_mixture = np.full(values.shape, -np.inf, dtype=np.float64)
+    for mixture_parameter, penalty in zip(
+        LAMBDA_GRID,
+        subexponential_psi(LAMBDA_GRID),
+        strict=True,
+    ):
+        component = (
+            mixture_parameter * cumulative - penalty * intrinsic_time
+        )
+        log_mixture = np.logaddexp(log_mixture, component)
     return log_mixture - math.log(len(LAMBDA_GRID))
 
 
-def one_stream_log_evidence(differences: np.ndarray) -> np.ndarray:
-    """Return the mixture log evidence for one observed loss sequence."""
-    sequence = np.asarray(differences, dtype=np.float64).reshape(1, -1)
-    return mixture_log_evidence(sequence)[0]
+def strong_null_log_evidence(differences: np.ndarray) -> np.ndarray:
+    """Return product-mixture evidence for the stepwise strong null."""
+    log_mixture = np.full(differences.shape, -np.inf, dtype=np.float64)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        for betting_fraction in STRONG_LAMBDA_GRID:
+            log_factors = np.log1p(betting_fraction * differences)
+            component = np.cumsum(log_factors, axis=1)
+            log_mixture = np.logaddexp(log_mixture, component)
+    return log_mixture - math.log(len(STRONG_LAMBDA_GRID))
 
 
 def first_crossing(log_evidence: np.ndarray) -> np.ndarray:
@@ -275,185 +296,11 @@ def evaluate_simulations() -> tuple[pd.DataFrame, dict[str, object]]:
     return pd.DataFrame(rows), summary
 
 
-def numeric_stream(stream_name: str) -> tuple[np.ndarray, np.ndarray]:
-    """Materialize a River stream as a fixed numeric matrix and binary target."""
-    observations = list(getattr(datasets, stream_name)())
-    feature_names = tuple(sorted(observations[0][0]))
-    for features, _ in observations:
-        if tuple(sorted(features)) != feature_names:
-            raise ValueError(f"{stream_name} does not have a fixed numeric schema")
-    features = np.asarray(
-        [
-            [float(observation[name]) for name in feature_names]
-            for observation, _ in observations
-        ],
-        dtype=np.float64,
-    )
-    targets = np.asarray([int(target) for _, target in observations], dtype=np.int8)
-    if set(np.unique(targets)) != {0, 1}:
-        raise ValueError(f"{stream_name} is not a binary classification stream")
-    return features, targets
-
-
-def neural_stream_loss_differences(
-    features: np.ndarray,
-    targets: np.ndarray,
-    hidden_layers: tuple[int, ...],
-    seed: int,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Compare frozen and continually updated MLPs using prequential Brier loss."""
-    scaler = StandardScaler().fit(features[:NEURAL_WARMUP])
-    standardized = scaler.transform(features)
-    model = MLPClassifier(
-        hidden_layer_sizes=hidden_layers,
-        activation="relu",
-        solver="sgd",
-        alpha=1e-4,
-        learning_rate="constant",
-        learning_rate_init=0.01,
-        momentum=0.9,
-        nesterovs_momentum=True,
-        max_iter=1,
-        shuffle=False,
-        random_state=seed,
-    )
-
-    first_update = True
-    classes = np.asarray([0, 1], dtype=np.int8)
-    for lower in range(0, NEURAL_WARMUP, NEURAL_BATCH_SIZE):
-        upper = min(NEURAL_WARMUP, lower + NEURAL_BATCH_SIZE)
-        model.partial_fit(
-            standardized[lower:upper],
-            targets[lower:upper],
-            classes=classes if first_update else None,
-        )
-        first_update = False
-
-    incumbent = copy.deepcopy(model)
-    candidate = copy.deepcopy(model)
-    incumbent_losses: list[float] = []
-    candidate_losses: list[float] = []
-    for lower in range(NEURAL_WARMUP, len(targets), NEURAL_BATCH_SIZE):
-        upper = min(len(targets), lower + NEURAL_BATCH_SIZE)
-        batch_features = standardized[lower:upper]
-        batch_targets = targets[lower:upper]
-        incumbent_probabilities = incumbent.predict_proba(batch_features)[:, 1]
-        candidate_probabilities = candidate.predict_proba(batch_features)[:, 1]
-        incumbent_losses.extend((incumbent_probabilities - batch_targets) ** 2)
-        candidate_losses.extend((candidate_probabilities - batch_targets) ** 2)
-        candidate.partial_fit(batch_features, batch_targets)
-
-    incumbent_array = np.asarray(incumbent_losses, dtype=np.float64)
-    candidate_array = np.asarray(candidate_losses, dtype=np.float64)
-    return incumbent_array - candidate_array, incumbent_array, candidate_array
-
-
-def evaluate_neural_streams() -> tuple[pd.DataFrame, dict[str, object]]:
-    """Evaluate promotion of continually learning MLPs across initializations."""
-    rows: list[dict[str, object]] = []
-    summary: dict[str, object] = {
-        "configuration": {
-            "warmup": NEURAL_WARMUP,
-            "update_batch_size": NEURAL_BATCH_SIZE,
-            "seeds": list(NEURAL_SEEDS),
-            "architectures": {
-                label: list(hidden_layers)
-                for label, hidden_layers in NEURAL_ARCHITECTURES.items()
-            },
-            "loss": "binary Brier loss",
-            "optimizer": "SGD",
-            "learning_rate": 0.01,
-            "momentum": 0.9,
-            "l2_penalty": 1e-4,
-        },
-        "streams": {},
-    }
-    threshold = math.log(1.0 / ALPHA)
-
-    for stream_name in ("Elec2", "Phishing", "Bananas"):
-        features, targets = numeric_stream(stream_name)
-        stream_summary: dict[str, object] = {}
-        for architecture, hidden_layers in NEURAL_ARCHITECTURES.items():
-            architecture_rows: list[dict[str, object]] = []
-            for seed in NEURAL_SEEDS:
-                differences, incumbent_losses, candidate_losses = (
-                    neural_stream_loss_differences(
-                        features,
-                        targets,
-                        hidden_layers,
-                        seed,
-                    )
-                )
-                log_evidence = one_stream_log_evidence(differences)
-                crossings = np.flatnonzero(log_evidence >= threshold)
-                promotion_time = int(crossings[0] + 1) if crossings.size else None
-                row = {
-                    "stream": stream_name,
-                    "architecture": architecture,
-                    "seed": seed,
-                    "n_post_warmup": int(len(differences)),
-                    "incumbent_mean_brier": float(np.mean(incumbent_losses)),
-                    "candidate_mean_brier": float(np.mean(candidate_losses)),
-                    "mean_brier_gap": float(np.mean(differences)),
-                    "promotion_time": promotion_time,
-                    "final_log_evidence": float(log_evidence[-1]),
-                }
-                rows.append(row)
-                architecture_rows.append(row)
-
-            gaps = np.asarray(
-                [row["mean_brier_gap"] for row in architecture_rows],
-                dtype=np.float64,
-            )
-            promotion_times = np.asarray(
-                [
-                    row["promotion_time"]
-                    for row in architecture_rows
-                    if row["promotion_time"] is not None
-                ],
-                dtype=np.float64,
-            )
-            incumbent_brier = np.asarray(
-                [row["incumbent_mean_brier"] for row in architecture_rows],
-                dtype=np.float64,
-            )
-            candidate_brier = np.asarray(
-                [row["candidate_mean_brier"] for row in architecture_rows],
-                dtype=np.float64,
-            )
-            stream_summary[architecture] = {
-                "runs": len(architecture_rows),
-                "promoted": int(len(promotion_times)),
-                "mean_brier_gap_median": float(np.median(gaps)),
-                "mean_brier_gap_range": [float(np.min(gaps)), float(np.max(gaps))],
-                "promotion_time_median": (
-                    float(np.median(promotion_times))
-                    if len(promotion_times)
-                    else None
-                ),
-                "promotion_time_range": (
-                    [int(np.min(promotion_times)), int(np.max(promotion_times))]
-                    if len(promotion_times)
-                    else None
-                ),
-                "incumbent_mean_brier_median": float(np.median(incumbent_brier)),
-                "candidate_mean_brier_median": float(np.median(candidate_brier)),
-            }
-        summary["streams"][stream_name] = stream_summary
-
-    return pd.DataFrame(rows), summary
-
-
 def main() -> None:
     simulation_data, simulation_summary = evaluate_simulations()
-    neural_data, neural_summary = evaluate_neural_streams()
     simulation_data.to_csv(DATA_DIR / "Figure1_source_data.csv", index=False)
-    neural_data.to_csv(DATA_DIR / "Neural_stream_results.csv", index=False)
 
-    summary = {
-        "simulation": simulation_summary,
-        "neural_streams": neural_summary,
-    }
+    summary = {"simulation": simulation_summary}
     (DATA_DIR / "analysis_summary.json").write_text(
         json.dumps(summary, indent=2),
         encoding="utf-8",

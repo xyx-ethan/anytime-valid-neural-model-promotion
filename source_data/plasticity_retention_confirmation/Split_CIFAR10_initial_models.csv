@@ -1,0 +1,6 @@
+seed,old_task_brier_loss,old_task_error_rate,evaluation_split
+1,0.0722293381613456,0.0948,confirmation
+2,0.073417168242264,0.0962,confirmation
+3,0.0716125925401379,0.095,confirmation
+4,0.0726574403165208,0.0964,confirmation
+5,0.0808765439110735,0.1074,confirmation
