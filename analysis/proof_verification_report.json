@@ -1,0 +1,39 @@
+{
+  "status": "pass",
+  "scope": "Exact algebra and finite discrete cases. Ville's inequality, the positive-drift hitting-time result, and Wald's identity remain cited external theorems.",
+  "symbolic_identities": {
+    "one_step_update": "M_prev * (1 + lambda * mu)",
+    "mixture_change": "mu * sum(w_i * M_i * lambda_i)",
+    "partial_alpha_budget": "sum_{j=1}^J 1/[j(j+1)] = J/(J+1)"
+  },
+  "one_step_conditions": {
+    "null_distributions": 264,
+    "betting_fractions_per_distribution": 16,
+    "exact_updates": 4224
+  },
+  "finite_horizon_ville": {
+    "support": [
+      "-1",
+      "0",
+      "1"
+    ],
+    "horizon": 8,
+    "alpha": "1/5",
+    "iid_null_models": 16,
+    "paths_per_model": 6561,
+    "maximum_crossing_probability": "5/64",
+    "maximizing_probability_counts_out_of_6": [
+      3,
+      0,
+      3
+    ]
+  },
+  "component_threshold": {
+    "enumerated_paths": 6561,
+    "triggering_paths": 1
+  },
+  "conjunctive_gate": {
+    "components": 4,
+    "logical_cases": 64
+  }
+}

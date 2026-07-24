@@ -1,0 +1,325 @@
+panel,scenario,method,x,y,lower,upper,n
+false_promotion,equal error 0.10,e-process,0.1,0.03725,0.033317392933664994,0.04162680253882706,8000
+false_promotion,equal error 0.10,unadjusted 20-look test,0.1,0.170875,0.16278536034049673,0.17928056798988456,8000
+false_promotion,equal error 0.10,Bonferroni 20-look test,0.1,0.0115,0.009386916737151677,0.014081996257580621,8000
+false_promotion,equal error 0.20,e-process,0.2,0.04325,0.03900735790815282,0.04793107814168131,8000
+false_promotion,equal error 0.20,unadjusted 20-look test,0.2,0.180875,0.17259414047658453,0.18946218881603358,8000
+false_promotion,equal error 0.20,Bonferroni 20-look test,0.2,0.0125,0.01028874626116762,0.01517920682978836,8000
+false_promotion,equal error 0.30,e-process,0.3,0.04075,0.03663341048154936,0.04530742532772557,8000
+false_promotion,equal error 0.30,unadjusted 20-look test,0.3,0.182375,0.1740663007221848,0.19098858871476884,8000
+false_promotion,equal error 0.30,Bonferroni 20-look test,0.3,0.013625,0.01130799770527084,0.016408875493936777,8000
+dependent_false_promotion,persistent shared difficulty,e-process,,0.0335,0.029775493781846955,0.037672301329806306,8000
+dependent_false_promotion,persistent shared difficulty,unadjusted 20-look test,,0.14325,0.13574440432056092,0.1510980413516412,8000
+dependent_false_promotion,persistent shared difficulty,Bonferroni 20-look test,,0.0065,0.004960480679358951,0.00851323183425495,8000
+promotion_summary,loss gap 0.05,e-process,0.05,0.425375,0.4145795443105526,0.4362420885087552,8000
+promotion_summary,loss gap 0.05,unadjusted 20-look test,0.05,0.88175,0.874490290276357,0.8886432664570328,8000
+promotion_summary,loss gap 0.05,Bonferroni 20-look test,0.05,0.456625,0.445733190894751,0.4675584449315468,8000
+promotion_summary,loss gap 0.10,e-process,0.1,0.989125,0.9866059875110078,0.9911744995543996,8000
+promotion_summary,loss gap 0.10,unadjusted 20-look test,0.1,0.99975,0.9990888497824459,0.9999314383053381,8000
+promotion_summary,loss gap 0.10,Bonferroni 20-look test,0.1,0.993875,0.9919123085817702,0.9953636189406997,8000
+promotion_summary,loss gap 0.20,e-process,0.2,1.0,0.99952004811184,1.0,8000
+promotion_summary,loss gap 0.20,unadjusted 20-look test,0.2,1.0,0.99952004811184,1.0,8000
+promotion_summary,loss gap 0.20,Bonferroni 20-look test,0.2,1.0,0.99952004811184,1.0,8000
+promotion_curve,loss gap 0.10,e-process,0.0,0.0,,,8000
+promotion_curve,loss gap 0.10,e-process,10.0,0.010875,,,8000
+promotion_curve,loss gap 0.10,e-process,20.0,0.057125,,,8000
+promotion_curve,loss gap 0.10,e-process,30.0,0.088125,,,8000
+promotion_curve,loss gap 0.10,e-process,40.0,0.1185,,,8000
+promotion_curve,loss gap 0.10,e-process,50.0,0.1465,,,8000
+promotion_curve,loss gap 0.10,e-process,60.0,0.172375,,,8000
+promotion_curve,loss gap 0.10,e-process,70.0,0.194125,,,8000
+promotion_curve,loss gap 0.10,e-process,80.0,0.21425,,,8000
+promotion_curve,loss gap 0.10,e-process,90.0,0.2345,,,8000
+promotion_curve,loss gap 0.10,e-process,100.0,0.254,,,8000
+promotion_curve,loss gap 0.10,e-process,110.0,0.27225,,,8000
+promotion_curve,loss gap 0.10,e-process,120.0,0.29,,,8000
+promotion_curve,loss gap 0.10,e-process,130.0,0.310625,,,8000
+promotion_curve,loss gap 0.10,e-process,140.0,0.331375,,,8000
+promotion_curve,loss gap 0.10,e-process,150.0,0.34975,,,8000
+promotion_curve,loss gap 0.10,e-process,160.0,0.36875,,,8000
+promotion_curve,loss gap 0.10,e-process,170.0,0.388375,,,8000
+promotion_curve,loss gap 0.10,e-process,180.0,0.4105,,,8000
+promotion_curve,loss gap 0.10,e-process,190.0,0.42825,,,8000
+promotion_curve,loss gap 0.10,e-process,200.0,0.445375,,,8000
+promotion_curve,loss gap 0.10,e-process,210.0,0.461875,,,8000
+promotion_curve,loss gap 0.10,e-process,220.0,0.478875,,,8000
+promotion_curve,loss gap 0.10,e-process,230.0,0.49625,,,8000
+promotion_curve,loss gap 0.10,e-process,240.0,0.513875,,,8000
+promotion_curve,loss gap 0.10,e-process,250.0,0.531375,,,8000
+promotion_curve,loss gap 0.10,e-process,260.0,0.5485,,,8000
+promotion_curve,loss gap 0.10,e-process,270.0,0.568125,,,8000
+promotion_curve,loss gap 0.10,e-process,280.0,0.58575,,,8000
+promotion_curve,loss gap 0.10,e-process,290.0,0.600125,,,8000
+promotion_curve,loss gap 0.10,e-process,300.0,0.612875,,,8000
+promotion_curve,loss gap 0.10,e-process,310.0,0.62725,,,8000
+promotion_curve,loss gap 0.10,e-process,320.0,0.640375,,,8000
+promotion_curve,loss gap 0.10,e-process,330.0,0.656125,,,8000
+promotion_curve,loss gap 0.10,e-process,340.0,0.67075,,,8000
+promotion_curve,loss gap 0.10,e-process,350.0,0.682875,,,8000
+promotion_curve,loss gap 0.10,e-process,360.0,0.6955,,,8000
+promotion_curve,loss gap 0.10,e-process,370.0,0.70725,,,8000
+promotion_curve,loss gap 0.10,e-process,380.0,0.719625,,,8000
+promotion_curve,loss gap 0.10,e-process,390.0,0.732625,,,8000
+promotion_curve,loss gap 0.10,e-process,400.0,0.74575,,,8000
+promotion_curve,loss gap 0.10,e-process,410.0,0.756125,,,8000
+promotion_curve,loss gap 0.10,e-process,420.0,0.76575,,,8000
+promotion_curve,loss gap 0.10,e-process,430.0,0.77575,,,8000
+promotion_curve,loss gap 0.10,e-process,440.0,0.78575,,,8000
+promotion_curve,loss gap 0.10,e-process,450.0,0.796375,,,8000
+promotion_curve,loss gap 0.10,e-process,460.0,0.80375,,,8000
+promotion_curve,loss gap 0.10,e-process,470.0,0.810625,,,8000
+promotion_curve,loss gap 0.10,e-process,480.0,0.818,,,8000
+promotion_curve,loss gap 0.10,e-process,490.0,0.826625,,,8000
+promotion_curve,loss gap 0.10,e-process,500.0,0.83575,,,8000
+promotion_curve,loss gap 0.10,e-process,510.0,0.844875,,,8000
+promotion_curve,loss gap 0.10,e-process,520.0,0.8505,,,8000
+promotion_curve,loss gap 0.10,e-process,530.0,0.857375,,,8000
+promotion_curve,loss gap 0.10,e-process,540.0,0.865,,,8000
+promotion_curve,loss gap 0.10,e-process,550.0,0.872125,,,8000
+promotion_curve,loss gap 0.10,e-process,560.0,0.877875,,,8000
+promotion_curve,loss gap 0.10,e-process,570.0,0.881875,,,8000
+promotion_curve,loss gap 0.10,e-process,580.0,0.88825,,,8000
+promotion_curve,loss gap 0.10,e-process,590.0,0.89425,,,8000
+promotion_curve,loss gap 0.10,e-process,600.0,0.899,,,8000
+promotion_curve,loss gap 0.10,e-process,610.0,0.90475,,,8000
+promotion_curve,loss gap 0.10,e-process,620.0,0.909875,,,8000
+promotion_curve,loss gap 0.10,e-process,630.0,0.91425,,,8000
+promotion_curve,loss gap 0.10,e-process,640.0,0.919125,,,8000
+promotion_curve,loss gap 0.10,e-process,650.0,0.923875,,,8000
+promotion_curve,loss gap 0.10,e-process,660.0,0.927875,,,8000
+promotion_curve,loss gap 0.10,e-process,670.0,0.93225,,,8000
+promotion_curve,loss gap 0.10,e-process,680.0,0.935125,,,8000
+promotion_curve,loss gap 0.10,e-process,690.0,0.939,,,8000
+promotion_curve,loss gap 0.10,e-process,700.0,0.9415,,,8000
+promotion_curve,loss gap 0.10,e-process,710.0,0.9455,,,8000
+promotion_curve,loss gap 0.10,e-process,720.0,0.94825,,,8000
+promotion_curve,loss gap 0.10,e-process,730.0,0.950875,,,8000
+promotion_curve,loss gap 0.10,e-process,740.0,0.953,,,8000
+promotion_curve,loss gap 0.10,e-process,750.0,0.956125,,,8000
+promotion_curve,loss gap 0.10,e-process,760.0,0.958625,,,8000
+promotion_curve,loss gap 0.10,e-process,770.0,0.961,,,8000
+promotion_curve,loss gap 0.10,e-process,780.0,0.964375,,,8000
+promotion_curve,loss gap 0.10,e-process,790.0,0.966125,,,8000
+promotion_curve,loss gap 0.10,e-process,800.0,0.96825,,,8000
+promotion_curve,loss gap 0.10,e-process,810.0,0.970125,,,8000
+promotion_curve,loss gap 0.10,e-process,820.0,0.972125,,,8000
+promotion_curve,loss gap 0.10,e-process,830.0,0.973875,,,8000
+promotion_curve,loss gap 0.10,e-process,840.0,0.975875,,,8000
+promotion_curve,loss gap 0.10,e-process,850.0,0.97725,,,8000
+promotion_curve,loss gap 0.10,e-process,860.0,0.97925,,,8000
+promotion_curve,loss gap 0.10,e-process,870.0,0.98075,,,8000
+promotion_curve,loss gap 0.10,e-process,880.0,0.981875,,,8000
+promotion_curve,loss gap 0.10,e-process,890.0,0.9825,,,8000
+promotion_curve,loss gap 0.10,e-process,900.0,0.98425,,,8000
+promotion_curve,loss gap 0.10,e-process,910.0,0.985125,,,8000
+promotion_curve,loss gap 0.10,e-process,920.0,0.98575,,,8000
+promotion_curve,loss gap 0.10,e-process,930.0,0.986125,,,8000
+promotion_curve,loss gap 0.10,e-process,940.0,0.9865,,,8000
+promotion_curve,loss gap 0.10,e-process,950.0,0.986625,,,8000
+promotion_curve,loss gap 0.10,e-process,960.0,0.98675,,,8000
+promotion_curve,loss gap 0.10,e-process,970.0,0.98775,,,8000
+promotion_curve,loss gap 0.10,e-process,980.0,0.9885,,,8000
+promotion_curve,loss gap 0.10,e-process,990.0,0.989,,,8000
+promotion_curve,loss gap 0.10,e-process,1000.0,0.989125,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,0.0,0.0,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,10.0,0.0,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,20.0,0.0,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,30.0,0.0,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,40.0,0.0,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,50.0,0.245,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,60.0,0.245,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,70.0,0.245,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,80.0,0.245,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,90.0,0.245,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,100.0,0.476875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,110.0,0.476875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,120.0,0.476875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,130.0,0.476875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,140.0,0.476875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,150.0,0.64975,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,160.0,0.64975,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,170.0,0.64975,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,180.0,0.64975,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,190.0,0.64975,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,200.0,0.77025,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,210.0,0.77025,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,220.0,0.77025,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,230.0,0.77025,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,240.0,0.77025,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,250.0,0.85175,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,260.0,0.85175,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,270.0,0.85175,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,280.0,0.85175,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,290.0,0.85175,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,300.0,0.905125,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,310.0,0.905125,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,320.0,0.905125,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,330.0,0.905125,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,340.0,0.905125,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,350.0,0.942625,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,360.0,0.942625,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,370.0,0.942625,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,380.0,0.942625,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,390.0,0.942625,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,400.0,0.96375,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,410.0,0.96375,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,420.0,0.96375,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,430.0,0.96375,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,440.0,0.96375,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,450.0,0.9775,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,460.0,0.9775,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,470.0,0.9775,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,480.0,0.9775,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,490.0,0.9775,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,500.0,0.987,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,510.0,0.987,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,520.0,0.987,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,530.0,0.987,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,540.0,0.987,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,550.0,0.990875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,560.0,0.990875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,570.0,0.990875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,580.0,0.990875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,590.0,0.990875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,600.0,0.99375,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,610.0,0.99375,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,620.0,0.99375,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,630.0,0.99375,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,640.0,0.99375,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,650.0,0.99625,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,660.0,0.99625,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,670.0,0.99625,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,680.0,0.99625,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,690.0,0.99625,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,700.0,0.997875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,710.0,0.997875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,720.0,0.997875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,730.0,0.997875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,740.0,0.997875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,750.0,0.99875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,760.0,0.99875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,770.0,0.99875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,780.0,0.99875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,790.0,0.99875,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,800.0,0.999,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,810.0,0.999,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,820.0,0.999,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,830.0,0.999,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,840.0,0.999,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,850.0,0.999375,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,860.0,0.999375,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,870.0,0.999375,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,880.0,0.999375,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,890.0,0.999375,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,900.0,0.9995,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,910.0,0.9995,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,920.0,0.9995,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,930.0,0.9995,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,940.0,0.9995,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,950.0,0.99975,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,960.0,0.99975,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,970.0,0.99975,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,980.0,0.99975,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,990.0,0.99975,,,8000
+promotion_curve,loss gap 0.10,unadjusted 20-look test,1000.0,0.99975,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,0.0,0.0,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,10.0,0.0,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,20.0,0.0,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,30.0,0.0,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,40.0,0.0,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,50.0,0.033625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,60.0,0.033625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,70.0,0.033625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,80.0,0.033625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,90.0,0.033625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,100.0,0.100625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,110.0,0.100625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,120.0,0.100625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,130.0,0.100625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,140.0,0.100625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,150.0,0.197125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,160.0,0.197125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,170.0,0.197125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,180.0,0.197125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,190.0,0.197125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,200.0,0.317,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,210.0,0.317,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,220.0,0.317,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,230.0,0.317,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,240.0,0.317,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,250.0,0.4265,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,260.0,0.4265,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,270.0,0.4265,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,280.0,0.4265,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,290.0,0.4265,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,300.0,0.53475,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,310.0,0.53475,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,320.0,0.53475,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,330.0,0.53475,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,340.0,0.53475,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,350.0,0.630125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,360.0,0.630125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,370.0,0.630125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,380.0,0.630125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,390.0,0.630125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,400.0,0.710625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,410.0,0.710625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,420.0,0.710625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,430.0,0.710625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,440.0,0.710625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,450.0,0.775,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,460.0,0.775,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,470.0,0.775,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,480.0,0.775,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,490.0,0.775,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,500.0,0.82725,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,510.0,0.82725,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,520.0,0.82725,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,530.0,0.82725,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,540.0,0.82725,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,550.0,0.8685,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,560.0,0.8685,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,570.0,0.8685,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,580.0,0.8685,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,590.0,0.8685,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,600.0,0.905125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,610.0,0.905125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,620.0,0.905125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,630.0,0.905125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,640.0,0.905125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,650.0,0.930625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,660.0,0.930625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,670.0,0.930625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,680.0,0.930625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,690.0,0.930625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,700.0,0.94875,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,710.0,0.94875,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,720.0,0.94875,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,730.0,0.94875,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,740.0,0.94875,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,750.0,0.963375,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,760.0,0.963375,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,770.0,0.963375,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,780.0,0.963375,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,790.0,0.963375,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,800.0,0.974125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,810.0,0.974125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,820.0,0.974125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,830.0,0.974125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,840.0,0.974125,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,850.0,0.982875,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,860.0,0.982875,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,870.0,0.982875,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,880.0,0.982875,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,890.0,0.982875,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,900.0,0.98825,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,910.0,0.98825,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,920.0,0.98825,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,930.0,0.98825,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,940.0,0.98825,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,950.0,0.991625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,960.0,0.991625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,970.0,0.991625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,980.0,0.991625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,990.0,0.991625,,,8000
+promotion_curve,loss gap 0.10,Bonferroni 20-look test,1000.0,0.993875,,,8000
