@@ -9,7 +9,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.lines import Line2D
+from matplotlib.patches import Rectangle
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,9 +29,9 @@ METHOD_ORDER = (
     "Bonferroni 20-look test",
 )
 METHOD_LABELS = {
-    "e-process": "Anytime-valid process",
-    "unadjusted 20-look test": "Unadjusted repeated test",
-    "Bonferroni 20-look test": "Bonferroni repeated test",
+    "e-process": "Anytime-valid evidence",
+    "unadjusted 20-look test": "Repeated test, unadjusted",
+    "Bonferroni 20-look test": "Repeated test, Bonferroni",
 }
 METHOD_COLORS = {
     "e-process": "#315F78",
@@ -53,6 +54,11 @@ MODE_COLORS = {
     "replay": "#315F78",
     "naive": "#9A5A5A",
     "no_update": "#7A858C",
+}
+MODE_SEED_COLORS = {
+    "replay": "#7893A2",
+    "naive": "#C08E8E",
+    "no_update": "#AAB1B5",
 }
 
 INK = "#20272C"
@@ -171,6 +177,7 @@ def figure_one(simulation: pd.DataFrame) -> None:
         linestyle=(0, (3, 2)),
         zorder=1,
     )
+    axes[0].axhspan(0.0, ALPHA, color="#EAF0F2", zorder=0)
     axes[0].text(
         3.28,
         ALPHA + 0.006,
@@ -181,9 +188,16 @@ def figure_one(simulation: pd.DataFrame) -> None:
     )
     axes[0].set_xticks(x_base, scenario_labels)
     axes[0].set_xlabel("Null setting")
-    axes[0].set_ylabel("False component-crossing probability")
+    axes[0].set_ylabel("False-crossing probability")
     axes[0].set_ylim(0.0, 0.215)
     axes[0].grid(axis="y", color=GRID, linewidth=0.5)
+    axes[0].set_title(
+        "False crossings under the null",
+        loc="left",
+        fontsize=8.5,
+        fontweight="bold",
+        pad=6,
+    )
     panel_label(axes[0], "a")
 
     promotion = simulation.loc[
@@ -211,8 +225,15 @@ def figure_one(simulation: pd.DataFrame) -> None:
     axes[1].set_ylim(0.0, 1.04)
     axes[1].set_xticks([0.05, 0.10, 0.20])
     axes[1].set_xlabel("True loss advantage")
-    axes[1].set_ylabel("Promotion probability by 1,000")
+    axes[1].set_ylabel("Detection probability by 1,000")
     axes[1].grid(axis="y", color=GRID, linewidth=0.5)
+    axes[1].set_title(
+        "Detection under a true advantage",
+        loc="left",
+        fontsize=8.5,
+        fontweight="bold",
+        pad=6,
+    )
     panel_label(axes[1], "b")
 
     handles, labels = axes[0].get_legend_handles_labels()
@@ -225,62 +246,79 @@ def figure_one(simulation: pd.DataFrame) -> None:
         columnspacing=1.4,
         handletextpad=0.5,
     )
-    figure.subplots_adjust(left=0.09, right=0.985, bottom=0.20, top=0.82)
+    figure.subplots_adjust(left=0.09, right=0.985, bottom=0.20, top=0.78)
     save_figure(figure, "Fig1")
     plt.close(figure)
 
 
-def draw_seed_summary(
+def draw_performance_panel(
     axis: plt.Axes,
     results: pd.DataFrame,
-    value_column: str,
-    ylabel: str,
+    specifications: tuple[tuple[str, str, str], ...],
+    xlabel: str,
+    xlim: tuple[float, float],
     reference: float,
+    acceptable_region: tuple[float, float] | None = None,
 ) -> None:
+    metric_offsets = (-0.11, 0.11)
     for mode_index, mode in enumerate(MODE_ORDER):
-        values = (
-            results.loc[results["candidate_mode"] == mode]
-            .sort_values("seed")[value_column]
-            .to_numpy(dtype=float)
+        mode_data = results.loc[
+            results["candidate_mode"] == mode
+        ].sort_values("seed")
+        for metric_index, (value_column, _, marker) in enumerate(specifications):
+            values = mode_data[value_column].to_numpy(dtype=float)
+            y_position = mode_index + metric_offsets[metric_index]
+            seed_jitter = np.linspace(-0.028, 0.028, len(values))
+            axis.hlines(
+                y_position,
+                values.min(),
+                values.max(),
+                color=MODE_COLORS[mode],
+                linewidth=1.0,
+                zorder=2,
+            )
+            axis.scatter(
+                values,
+                np.full(len(values), y_position) + seed_jitter,
+                s=17,
+                marker=marker,
+                color=MODE_SEED_COLORS[mode],
+                edgecolor="white",
+                linewidth=0.35,
+                zorder=3,
+            )
+            axis.scatter(
+                np.median(values),
+                y_position,
+                marker=marker,
+                s=47,
+                color=MODE_COLORS[mode],
+                edgecolor="white",
+                linewidth=0.7,
+                zorder=4,
+            )
+    if acceptable_region is not None:
+        axis.axvspan(
+            acceptable_region[0],
+            acceptable_region[1],
+            color="#EAF0F2",
+            zorder=0,
         )
-        jitter = np.linspace(-0.045, 0.045, len(values))
-        axis.scatter(
-            np.full(len(values), mode_index) + jitter,
-            values,
-            s=22,
-            color=MODE_COLORS[mode],
-            edgecolor="white",
-            linewidth=0.45,
-            zorder=3,
-        )
-        axis.vlines(
-            mode_index,
-            values.min(),
-            values.max(),
-            color=MODE_COLORS[mode],
-            linewidth=1.0,
-            zorder=2,
-        )
-        axis.scatter(
-            mode_index,
-            np.median(values),
-            marker="D",
-            s=40,
-            color=MODE_COLORS[mode],
-            edgecolor="white",
-            linewidth=0.65,
-            zorder=4,
-        )
-    axis.axhline(
+    axis.axvline(
         reference,
         color=INK,
         linewidth=0.8,
         linestyle=(0, (3, 2)),
         zorder=1,
     )
-    axis.set_xticks(range(len(MODE_ORDER)), [MODE_LABELS[m] for m in MODE_ORDER])
-    axis.set_ylabel(ylabel)
-    axis.grid(axis="y", color=GRID, linewidth=0.5)
+    axis.set_xlim(*xlim)
+    axis.set_ylim(len(MODE_ORDER) - 0.52, -0.52)
+    axis.set_yticks(
+        range(len(MODE_ORDER)),
+        [MODE_LABELS[mode] for mode in MODE_ORDER],
+    )
+    axis.set_xlabel(xlabel)
+    axis.grid(axis="x", color=GRID, linewidth=0.5)
 
 
 def figure_two(results: pd.DataFrame) -> None:
@@ -302,49 +340,99 @@ def figure_two(results: pd.DataFrame) -> None:
         "retention_mean_error_difference"
     ]
     figure, axes = plt.subplots(
+        1,
         2,
-        2,
-        figsize=(WIDTH_MM / 25.4, 126.0 / 25.4),
-        gridspec_kw={"hspace": 0.42, "wspace": 0.30},
+        figsize=(WIDTH_MM / 25.4, 88.0 / 25.4),
+        gridspec_kw={"wspace": 0.34},
     )
-    specifications = (
+    new_task_metrics = (
         (
             "current_mean_brier_advantage",
-            "New-task Brier advantage",
-            0.0,
+            "Brier loss",
+            "o",
         ),
         (
             "current_mean_error_advantage",
-            "New-task error advantage",
-            0.0,
+            "Classification error",
+            "s",
         ),
+    )
+    old_task_metrics = (
         (
             "old_task_brier_increase",
-            "Old-task Brier increase",
-            RETENTION_MARGIN,
+            "Brier loss",
+            "o",
         ),
         (
             "old_task_error_increase",
-            "Old-task error increase",
-            RETENTION_MARGIN,
+            "Classification error",
+            "s",
         ),
     )
-    for label, axis, spec in zip(
-        ("a", "b", "c", "d"),
-        axes.flat,
-        specifications,
-        strict=True,
-    ):
-        value_column, ylabel, reference = spec
-        draw_seed_summary(
-            axis,
-            plot_data,
-            value_column,
-            ylabel,
-            reference,
+    draw_performance_panel(
+        axes[0],
+        plot_data,
+        new_task_metrics,
+        "New-task improvement (higher is better)",
+        (-0.05, 0.86),
+        0.0,
+    )
+    axes[0].set_title(
+        "Learning the new task",
+        loc="left",
+        fontsize=8.5,
+        fontweight="bold",
+        pad=6,
+    )
+    panel_label(axes[0], "a")
+
+    draw_performance_panel(
+        axes[1],
+        plot_data,
+        old_task_metrics,
+        "Old-task loss increase (lower is better)",
+        (-0.05, 0.98),
+        RETENTION_MARGIN,
+        acceptable_region=(-0.05, RETENTION_MARGIN),
+    )
+    axes[1].text(
+        RETENTION_MARGIN + 0.012,
+        2.35,
+        "0.05 margin",
+        color=MUTED,
+        ha="left",
+        va="center",
+    )
+    axes[1].set_title(
+        "Retaining the old task",
+        loc="left",
+        fontsize=8.5,
+        fontweight="bold",
+        pad=6,
+    )
+    panel_label(axes[1], "b")
+
+    metric_handles = [
+        Line2D(
+            [0],
+            [0],
+            marker=marker,
+            color=INK,
+            linestyle="none",
+            markersize=5.5,
+            label=label,
         )
-        panel_label(axis, label)
-    figure.subplots_adjust(left=0.10, right=0.985, bottom=0.10, top=0.96)
+        for _, label, marker in new_task_metrics
+    ]
+    figure.legend(
+        handles=metric_handles,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 0.99),
+        ncol=2,
+        columnspacing=1.6,
+        handletextpad=0.5,
+    )
+    figure.subplots_adjust(left=0.105, right=0.985, bottom=0.19, top=0.77)
     save_figure(figure, "Fig2")
     plt.close(figure)
 
@@ -357,16 +445,16 @@ def figure_three(results: pd.DataFrame) -> None:
         "retention_error_crossing_index",
     )
     component_labels = (
-        "New Brier",
-        "New error",
-        "Old Brier",
-        "Old error",
+        "Brier",
+        "Error",
+        "Brier",
+        "Error",
     )
     figure, axes = plt.subplots(
         1,
         2,
-        figsize=(WIDTH_MM / 25.4, 84.0 / 25.4),
-        gridspec_kw={"width_ratios": (1.15, 1.0), "wspace": 0.38},
+        figsize=(WIDTH_MM / 25.4, 91.0 / 25.4),
+        gridspec_kw={"width_ratios": (1.18, 1.0), "wspace": 0.40},
     )
 
     for mode_index, mode in enumerate(MODE_ORDER):
@@ -389,24 +477,46 @@ def figure_three(results: pd.DataFrame) -> None:
             )
         if (~promoted).any():
             axes[0].scatter(
-                np.full((~promoted).sum(), HORIZON * 1.045),
+                np.full((~promoted).sum(), HORIZON),
                 y[~promoted],
-                facecolor="white",
-                edgecolor=MODE_COLORS[mode],
-                marker=">",
+                color=MODE_COLORS[mode],
+                marker="x",
                 linewidth=1.0,
-                s=34,
+                s=31,
                 zorder=3,
             )
-    axes[0].set_xlim(0, HORIZON * 1.10)
+    axes[0].axvline(
+        HORIZON,
+        color=MUTED,
+        linewidth=0.8,
+        linestyle=(0, (3, 2)),
+        zorder=1,
+    )
+    axes[0].text(
+        HORIZON,
+        -0.36,
+        "not met by horizon",
+        ha="right",
+        va="center",
+        color=MUTED,
+        fontsize=7.7,
+    )
+    axes[0].set_xlim(0, HORIZON * 1.06)
     axes[0].set_xticks([0, 1_000, 2_000, 3_000, 4_000, 5_000])
     axes[0].set_yticks(
         range(len(MODE_ORDER)),
         [MODE_LABELS[m] for m in MODE_ORDER],
     )
     axes[0].set_ylim(len(MODE_ORDER) - 0.5, -0.5)
-    axes[0].set_xlabel("Observations per stream at eligibility")
+    axes[0].set_xlabel("Labeled observations per stream")
     axes[0].grid(axis="x", color=GRID, linewidth=0.5)
+    axes[0].set_title(
+        "When the full gate was met",
+        loc="left",
+        fontsize=8.5,
+        fontweight="bold",
+        pad=6,
+    )
     panel_label(axes[0], "a")
 
     pass_counts = np.asarray(
@@ -424,22 +534,30 @@ def figure_three(results: pd.DataFrame) -> None:
         ],
         dtype=float,
     )
-    cmap = LinearSegmentedColormap.from_list(
-        "neutral_blue",
-        ["#F4F6F7", "#AFC2CC", "#315F78"],
-    )
-    axes[1].imshow(
-        pass_counts,
-        cmap=cmap,
-        vmin=0,
-        vmax=5,
-        interpolation="nearest",
-        aspect="auto",
-    )
+    axes[1].set_xlim(-0.5, 3.5)
+    axes[1].set_ylim(2.5, -0.5)
     for row in range(pass_counts.shape[0]):
         for column in range(pass_counts.shape[1]):
             value = int(pass_counts[row, column])
-            text_color = "white" if value >= 4 else INK
+            if value == 5:
+                face_color = "#315F78"
+                text_color = "white"
+            elif value == 4:
+                face_color = "#7F9AA8"
+                text_color = "white"
+            else:
+                face_color = "#F1F3F4"
+                text_color = "#8B4F4F"
+            axes[1].add_patch(
+                Rectangle(
+                    (column - 0.47, row - 0.42),
+                    0.94,
+                    0.84,
+                    facecolor=face_color,
+                    edgecolor="white",
+                    linewidth=1.2,
+                )
+            )
             axes[1].text(
                 column,
                 row,
@@ -449,7 +567,8 @@ def figure_three(results: pd.DataFrame) -> None:
                 color=text_color,
                 fontweight="bold",
             )
-    axes[1].set_xticks(range(4), component_labels, rotation=20, ha="right")
+    axes[1].axvline(1.5, color=INK, linewidth=0.7)
+    axes[1].set_xticks(range(4), component_labels)
     axes[1].set_yticks(
         range(len(MODE_ORDER)),
         [MODE_LABELS[m] for m in MODE_ORDER],
@@ -457,10 +576,39 @@ def figure_three(results: pd.DataFrame) -> None:
     axes[1].tick_params(length=0)
     for spine in axes[1].spines.values():
         spine.set_visible(False)
-    axes[1].set_xlabel("Component requirements crossed")
+    axes[1].text(
+        0.5,
+        1.08,
+        "NEW TASK",
+        transform=axes[1].get_xaxis_transform(),
+        ha="center",
+        va="bottom",
+        color=MUTED,
+        fontsize=7.7,
+        fontweight="bold",
+    )
+    axes[1].text(
+        2.5,
+        1.08,
+        "OLD TASK",
+        transform=axes[1].get_xaxis_transform(),
+        ha="center",
+        va="bottom",
+        color=MUTED,
+        fontsize=7.7,
+        fontweight="bold",
+    )
+    axes[1].set_xlabel("Seeds meeting each requirement")
+    axes[1].set_title(
+        "Which requirements were met",
+        loc="left",
+        fontsize=8.5,
+        fontweight="bold",
+        pad=23,
+    )
     panel_label(axes[1], "b")
 
-    figure.subplots_adjust(left=0.10, right=0.985, bottom=0.21, top=0.95)
+    figure.subplots_adjust(left=0.10, right=0.985, bottom=0.20, top=0.78)
     save_figure(figure, "Fig3")
     plt.close(figure)
 

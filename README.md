@@ -94,4 +94,4 @@ original terms. The generated paired-loss arrays and numerical summaries are
 included for independent verification. The analysis code is released under
 the MIT License.
 
-The manuscript cites the immutable `v1.0.0` repository release.
+The manuscript cites the immutable `v1.0.1` repository release.
