@@ -38,7 +38,7 @@ jobs:
           test "$(git -C "$FC" rev-parse HEAD)" = "8323e878b83fcd7f4a448256069352a265460d75"
           cp "$GITHUB_WORKSPACE/d14-ci/D14ShortWitness.lean" "$FC/D14ShortWitness.lean"
 
-      - name: Download Mathlib cache and build source dependency
+      - name: Download Mathlib cache and compile OEIS dependency
         shell: bash
         run: |
           set -euo pipefail
@@ -46,7 +46,12 @@ jobs:
           FC="$RUNNER_TEMP/formal-conjectures"
           cd "$FC"
           lake exe cache get
-          lake build FormalConjectures.OEIS.51903
+          lake build FormalConjecturesUtil
+          mkdir -p .lake/build/lib/lean/FormalConjectures/OEIS
+          lake env lean \
+            -o .lake/build/lib/lean/FormalConjectures/OEIS/51903.olean \
+            FormalConjectures/OEIS/51903.lean
+          test -s .lake/build/lib/lean/FormalConjectures/OEIS/51903.olean
 
       - name: Kernel-check D14 witness and print axioms
         shell: bash
