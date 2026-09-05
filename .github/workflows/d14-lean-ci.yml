@@ -1,0 +1,74 @@
+name: D14 Lean witness verification
+
+on:
+  push:
+    branches:
+      - d14-lean-ci-20260905
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pinned Lean toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          "$HOME/.elan/bin/elan" toolchain install leanprover/lean4:v4.33.1
+          "$HOME/.elan/bin/lean" --version
+
+      - name: Fetch pinned Formal Conjectures checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          FC="$RUNNER_TEMP/formal-conjectures"
+          git init -q "$FC"
+          git -C "$FC" remote add origin https://github.com/google-deepmind/formal-conjectures.git
+          git -C "$FC" fetch -q --depth 1 origin 8323e878b83fcd7f4a448256069352a265460d75
+          git -C "$FC" checkout -q --detach FETCH_HEAD
+          test "$(git -C "$FC" rev-parse HEAD)" = "8323e878b83fcd7f4a448256069352a265460d75"
+          cp "$GITHUB_WORKSPACE/d14-ci/D14ShortWitness.lean" "$FC/D14ShortWitness.lean"
+
+      - name: Download Mathlib cache and build source dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.elan/bin:$PATH"
+          FC="$RUNNER_TEMP/formal-conjectures"
+          cd "$FC"
+          lake exe cache get
+          lake build FormalConjectures.OEIS.51903
+
+      - name: Kernel-check D14 witness and print axioms
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.elan/bin:$PATH"
+          FC="$RUNNER_TEMP/formal-conjectures"
+          cd "$FC"
+          lake env lean -o "$RUNNER_TEMP/D14ShortWitness.olean" D14ShortWitness.lean \
+            2>&1 | tee "$RUNNER_TEMP/d14-lean.log"
+          test -s "$RUNNER_TEMP/D14ShortWitness.olean"
+          if grep -E 'sorryAx|Lean\.ofReduceBool|Lean\.trustCompiler' "$RUNNER_TEMP/d14-lean.log"; then
+            echo 'Forbidden axiom found in #print axioms output' >&2
+            exit 3
+          fi
+          grep -E "D14\.R5\.(short_answer|exists_odd_witness).*axiom|depends on axioms|does not depend on any axioms" "$RUNNER_TEMP/d14-lean.log" || true
+
+      - name: Upload verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: d14-lean-verification
+          path: |
+            ${{ runner.temp }}/d14-lean.log
+            ${{ runner.temp }}/D14ShortWitness.olean
+          if-no-files-found: warn
