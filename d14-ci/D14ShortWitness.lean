@@ -1,5 +1,5 @@
 /- D14 short proof candidate for CI verification only. -/
-import FormalConjectures.OEIS.51903
+import FormalConjectures.OEIS.«51903»
 
 namespace D14.R5
 open OeisA51903
