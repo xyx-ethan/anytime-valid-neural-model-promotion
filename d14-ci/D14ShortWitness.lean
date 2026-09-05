@@ -17,6 +17,14 @@ theorem mul_mod_certificate {m b e f r s t : ℕ}
     _ = (r * s) % m := by rw [he, hf]
     _ = t := hprod
 
+/-- A multiplication step whose remainder is certified by `r*s = q*m+t` and `t < m`. -/
+theorem mul_mod_certificate_q {m b e f r s t q : ℕ}
+    (he : b ^ e % m = r) (hf : b ^ f % m = s)
+    (hmul : r * s = q * m + t) (ht : t < m) : b ^ (e + f) % m = t := by
+  apply mul_mod_certificate he hf
+  rw [hmul]
+  simpa [Nat.add_mod, Nat.mod_eq_of_lt ht]
+
 theorem short_answer :
     True ↔ ∃ n : ℕ, Odd n ∧ 1 < a n ∧ 2 ^ n ≡ 2 ^ (a n) [MOD n] := by
   constructor
@@ -83,9 +91,11 @@ theorem short_answer :
       have h19 : (2 : ℕ) ^ 9652 % N = 244977283311463632330 := by
         exact mul_mod_certificate h18 h18 (by norm_num [N])
       have h20 : (2 : ℕ) ^ 19304 % N = 174317198221410385929 := by
-        exact mul_mod_certificate h19 h19 (by norm_num [N])
+        exact mul_mod_certificate_q (q := 172139840334164908203) h19 h19
+          (by norm_num [N]) (by norm_num [N])
       have h21 : (2 : ℕ) ^ 19305 % N = 1 := by
-        exact mul_mod_certificate h20 h0 (by norm_num [N])
+        exact mul_mod_certificate_q (q := 1) h20 h0
+          (by norm_num [N]) (by norm_num [N])
       have hperiod : (2 : ℕ) ^ 19305 ≡ 1 [MOD N] := by
         change (2 : ℕ) ^ 19305 % N = 1 % N
         rw [h21]
@@ -108,5 +118,6 @@ theorem exists_odd_witness :
 end D14.R5
 
 #print axioms D14.R5.mul_mod_certificate
+#print axioms D14.R5.mul_mod_certificate_q
 #print axioms D14.R5.short_answer
 #print axioms D14.R5.exists_odd_witness
