@@ -53,7 +53,7 @@ jobs:
             FormalConjectures/OEIS/51903.lean
           test -s .lake/build/lib/lean/FormalConjectures/OEIS/51903.olean
 
-      - name: Kernel-check D14 witness and print axioms
+      - name: Kernel-check standalone D14 witness and print axioms
         shell: bash
         run: |
           set -euo pipefail
@@ -64,10 +64,69 @@ jobs:
             2>&1 | tee "$RUNNER_TEMP/d14-lean.log"
           test -s "$RUNNER_TEMP/D14ShortWitness.olean"
           if grep -E 'sorryAx|Lean\.ofReduceBool|Lean\.trustCompiler' "$RUNNER_TEMP/d14-lean.log"; then
-            echo 'Forbidden axiom found in #print axioms output' >&2
+            echo 'Forbidden axiom found in standalone #print axioms output' >&2
             exit 3
           fi
-          grep -E "D14\.R5\.(short_answer|exists_odd_witness).*axiom|depends on axioms|does not depend on any axioms" "$RUNNER_TEMP/d14-lean.log" || true
+
+      - name: Patch actual upstream conjecture3 in pinned checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          FC="$RUNNER_TEMP/formal-conjectures"
+          export FC GITHUB_WORKSPACE RUNNER_TEMP
+          python3 - <<'PY'
+          from pathlib import Path
+          import os
+
+          fc = Path(os.environ['FC'])
+          src = fc / 'FormalConjectures/OEIS/51903.lean'
+          proof = Path(os.environ['GITHUB_WORKSPACE']) / 'd14-ci/D14ShortWitness.lean'
+          text = src.read_text()
+          ptext = proof.read_text()
+
+          body = ptext.split('namespace D14.R5\n', 1)[1].split('\nend D14.R5', 1)[0]
+          old = '''@[category research open, AMS 11]
+          theorem conjecture3 :
+              answer(sorry) ↔ ∃ n : ℕ, Odd n ∧ 1 < a n ∧ 2 ^ n ≡ 2 ^ (a n) [MOD n] := by
+            sorry'''
+          new = '''set_option maxRecDepth 1000000
+          set_option maxHeartbeats 0
+
+          namespace D14Proof
+          ''' + body + '''
+          end D14Proof
+
+          @[category research solved, AMS 11]
+          theorem conjecture3 :
+              answer(True) ↔ ∃ n : ℕ, Odd n ∧ 1 < a n ∧ 2 ^ n ≡ 2 ^ (a n) [MOD n] := by
+            change True ↔ ∃ n : ℕ, Odd n ∧ 1 < a n ∧ 2 ^ n ≡ 2 ^ (a n) [MOD n]
+            exact D14Proof.short_answer'''
+          if text.count(old) != 1:
+              raise SystemExit(f'expected one conjecture3 block, found {text.count(old)}')
+          text = text.replace(old, new, 1)
+          text += '\n#print axioms OeisA51903.conjecture3\n'
+          src.write_text(text)
+          (Path(os.environ['RUNNER_TEMP']) / '51903-patched.lean').write_text(text)
+          PY
+
+      - name: Kernel-check patched OeisA51903.conjecture3 and audit axioms
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.elan/bin:$PATH"
+          FC="$RUNNER_TEMP/formal-conjectures"
+          cd "$FC"
+          rm -f .lake/build/lib/lean/FormalConjectures/OEIS/51903.olean
+          lake env lean \
+            -o "$RUNNER_TEMP/51903-patched.olean" \
+            FormalConjectures/OEIS/51903.lean \
+            2>&1 | tee "$RUNNER_TEMP/upstream-lean.log"
+          test -s "$RUNNER_TEMP/51903-patched.olean"
+          if grep -E "'OeisA51903\.conjecture3'.*(sorryAx|Lean\.ofReduceBool|Lean\.trustCompiler)|sorryAx|Lean\.ofReduceBool|Lean\.trustCompiler" "$RUNNER_TEMP/upstream-lean.log"; then
+            echo 'Forbidden axiom found in patched conjecture3 audit' >&2
+            exit 4
+          fi
+          grep -F "'OeisA51903.conjecture3' depends on axioms: [propext, Classical.choice, Quot.sound]" "$RUNNER_TEMP/upstream-lean.log"
 
       - name: Upload verification evidence
         if: always()
@@ -77,4 +136,7 @@ jobs:
           path: |
             ${{ runner.temp }}/d14-lean.log
             ${{ runner.temp }}/D14ShortWitness.olean
+            ${{ runner.temp }}/upstream-lean.log
+            ${{ runner.temp }}/51903-patched.lean
+            ${{ runner.temp }}/51903-patched.olean
           if-no-files-found: warn
