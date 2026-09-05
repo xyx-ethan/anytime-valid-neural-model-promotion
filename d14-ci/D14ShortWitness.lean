@@ -1,6 +1,9 @@
 /- D14 short proof candidate for CI verification only. -/
 import FormalConjectures.OEIS.«51903»
 
+set_option maxRecDepth 10000
+set_option maxHeartbeats 0
+
 namespace D14.R5
 open OeisA51903
 
@@ -13,8 +16,8 @@ theorem short_answer :
       norm_num [N, List.prod_cons, List.prod_nil]
     have hp : ∀ p ∈ ([7, 31, 73, 79, 89, 271, 937, 3511, 3511] : List ℕ), Nat.Prime p := by
       intro p h
-      simp only [List.mem_cons, List.mem_singleton] at h
-      rcases h with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+      simp at h
+      rcases h with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
       all_goals norm_num
     have hs : ([7, 31, 73, 79, 89, 271, 937, 3511, 3511] : List ℕ).Pairwise (· ≤ ·) := by
       decide
