@@ -89,21 +89,30 @@ jobs:
           theorem conjecture3 :
               answer(sorry) ↔ ∃ n : ℕ, Odd n ∧ 1 < a n ∧ 2 ^ n ≡ 2 ^ (a n) [MOD n] := by
             sorry'''
-          new = '''set_option maxRecDepth 1000000
-          set_option maxHeartbeats 0
-
-          namespace D14Proof
-          ''' + body + '''
-          end D14Proof
-
-          @[category research solved, AMS 11]
+          new_theorem = '''@[category research solved, AMS 11]
           theorem conjecture3 :
               answer(True) ↔ ∃ n : ℕ, Odd n ∧ 1 < a n ∧ 2 ^ n ≡ 2 ^ (a n) [MOD n] := by
             change True ↔ ∃ n : ℕ, Odd n ∧ 1 < a n ∧ 2 ^ n ≡ 2 ^ (a n) [MOD n]
             exact D14Proof.short_answer'''
           if text.count(old) != 1:
               raise SystemExit(f'expected one conjecture3 block, found {text.count(old)}')
-          text = text.replace(old, new, 1)
+
+          # Preserve the original conjecture3 docstring immediately before the
+          # category/theorem declaration.  The helper proof goes before it.
+          theorem_pos = text.index(old)
+          doc_pos = text.rfind('/--', 0, theorem_pos)
+          if doc_pos < 0:
+              raise SystemExit('could not locate conjecture3 docstring')
+          helpers = '''set_option maxRecDepth 1000000
+          set_option maxHeartbeats 0
+
+          namespace D14Proof
+          ''' + body + '''
+          end D14Proof
+
+          '''
+          text = text[:doc_pos] + helpers + text[doc_pos:]
+          text = text.replace(old, new_theorem, 1)
           text += '\n#print axioms OeisA51903.conjecture3\n'
           src.write_text(text)
           (Path(os.environ['RUNNER_TEMP']) / '51903-patched.lean').write_text(text)
