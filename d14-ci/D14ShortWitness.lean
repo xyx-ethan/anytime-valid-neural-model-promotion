@@ -1,7 +1,7 @@
 /- D14 proof candidate for CI verification only. -/
 import FormalConjectures.OEIS.«51903»
 
-set_option maxRecDepth 10000
+set_option maxRecDepth 1000000
 set_option maxHeartbeats 0
 
 namespace D14.R5
